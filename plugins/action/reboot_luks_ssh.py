@@ -1,6 +1,6 @@
 #!/usr/bin/python
-# SPDX-FileCopyrightText: 2016-2018, Matt Davis <mdavis@ansible.com>
-# SPDX-FileCopyrightText: 2018, Sam Doran <sdoran@redhat.com>
+# SPDX-FileCopyrightText: 2016-2018 Matt Davis <mdavis@ansible.com>
+# SPDX-FileCopyrightText: 2018 Sam Doran <sdoran@redhat.com>
 # SPDX-FileCopyrightText: 2022 Kalle Fagerberg <kalle.fagerberg@riskident.com>
 # SPDX-FileCopyrightText: 2022 Risk.Ident GmbH <contact@riskident.com>
 #
