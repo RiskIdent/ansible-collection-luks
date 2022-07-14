@@ -1,0 +1,19 @@
+# SPDX-FileCopyrightText: 2022 Risk.Ident GmbH <contact@riskident.com>
+#
+# SPDX-License-Identifier: CC0-1.0
+
+galaxy_info:
+  author: Kalle Fagerberg <kalle.fagerberg@riskident.com>
+  company: Risk.Ident GmbH
+  description: Installs Dropbear into initramfs to be used in LUKS boot
+  license: GPL-3.0-or-later
+  min_ansible_version: "2.9"
+  platforms:
+    - name: Ubuntu
+      versions:
+        - all
+    - name: Debian
+      versions:
+        - all
+
+dependencies: []

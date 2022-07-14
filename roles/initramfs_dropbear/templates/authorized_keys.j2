@@ -1,0 +1,11 @@
+# {{ ansible_managed }}
+
+## Admin keys
+{% for path in dropbear_ssh_pub_keys_admin %}
+{{ lookup('ansible.builtin.file', path) }}
+{% endfor %}
+
+## Unlock-only keys
+{% for path in dropbear_ssh_pub_keys_unlock %}
+command="/usr/bin/cryptroot-unlock",no-port-forwarding,no-X11-forwarding {{ lookup('ansible.builtin.file', path) }}
+{% endfor %}

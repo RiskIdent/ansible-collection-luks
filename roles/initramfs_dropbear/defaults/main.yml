@@ -1,0 +1,30 @@
+---
+# defaults file for initramfs_dropbear
+#
+# SPDX-FileCopyrightText: 2022 Risk.Ident GmbH <contact@riskident.com>
+#
+# SPDX-License-Identifier: CC0-1.0
+
+# List of paths to SSH public keys that can login with forced command only
+# for unlocking
+dropbear_ssh_pub_keys_unlock: [
+  #"~/.ssh/id_rsa.pub",
+  #"~/.ssh/id_ed25519.pub",
+]
+
+# List of paths to SSH public keys that can login to shell prompt
+# (no forced command)
+dropbear_ssh_pub_keys_admin: [
+  #"~/.ssh/id_rsa.pub",
+  #"~/.ssh/id_ed25519.pub",
+]
+
+# SSH port that Dropbear should listen on during LUKS boot
+dropbear_port: 1024
+
+# Additional DROPBEAR_OPTIONS values. Recommended: -j, -k, and -s:
+#   -j: Disable SSH local port forwarding
+#   -k: Disable SSH remote port forwarding
+#   -s: Disable password logins / require SSH keys for authentication
+dropbear_options: "-jks"
+
