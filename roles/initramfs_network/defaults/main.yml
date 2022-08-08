@@ -1,0 +1,60 @@
+---
+# defaults file for initramfs_network
+#
+# SPDX-FileCopyrightText: 2022 Risk.Ident GmbH <contact@riskident.com>
+#
+# SPDX-License-Identifier: CC0-1.0
+
+# Network devices IP addresses
+#   FIELD       TYPE    DESCRIPTION
+#   name        string  Network device (interface or VLAN) name
+#   addr_cidr   string  (optional) IPv4 address and netmask, CIDR notation
+#   gateway_ip  string  (optional) IPv4 address of gateway
+initramfs_network_device_ips: null
+# Examples:
+#
+#  - name: eth0
+#    cidr: 192.168.1.23/24
+#  - name: eth0
+#    cidr: 192.168.1.24/24 # adds another IP
+#
+#  - name: bond0.123
+#    cidr: 192.168.1.23/24
+#    gateway_ip: 192.168.1.1
+
+# Network interface bonding.
+#   FIELD       TYPE      DESCRIPTION
+#   name        string    Network link interface name
+#   interfaces  string[]  Names of network links to bond
+#   mac         string    (optional) Hardware MAC address of bond interface, defaults to first interface's MAC address
+initramfs_network_bonds:
+# Examples:
+#  - name: bond0
+#    interfaces: [ eth0, eth1 ]
+#
+#  - name: bond1
+#    interfaces: [ eth2, eth3 ]
+#    mac: aa:bb:cc:dd:ee:ff
+#    addr_cidr: 192.168.123.44/24
+#    gateway_ip: 192.168.123.1
+
+# Bonding driver options.
+# https://wiki.linuxfoundation.org/networking/bonding#bonding_driver_options
+initramfs_network_bond_driver_options: "mode=802.3ad miimon=100"
+
+# VLAN mappings link from interface to VLAN ID.
+#   FIELD  TYPE     DESCRIPTION
+#   link   string   Network link interface name
+#   id     integer  VLAN ID
+initramfs_network_vlans:
+# Example:
+#  - link: bond0
+#    id: 123
+
+# If true, then will install iproute2 package, required for bonding support
+initramfs_network_install_iproute2: true
+# If true, then will install vlan package, required for vlan support
+initramfs_network_install_vlan: true
+
+# Tarball to download https://github.com/stcz/initramfs-tools-network-hook
+initramfs_network_git_repo_tar_gz: https://github.com/stcz/initramfs-tools-network-hook/archive/refs/heads/main.tar.gz
