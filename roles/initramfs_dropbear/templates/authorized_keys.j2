@@ -1,11 +1,27 @@
 # {{ ansible_managed }}
 
 ## Admin keys
-{% for path in dropbear_ssh_pub_keys_admin %}
-{{ lookup('ansible.builtin.file', path) }}
+{% set has_admin_options = dropbear_ssh_pub_keys_admin_options is sequence and dropbear_ssh_pub_keys_admin_options | length > 0 %}
+{% for ssh_key in dropbear_ssh_pub_keys_admin %}
+	{%- if has_admin_options %}
+		{%- set comma = joiner(',') %}
+		{%- for option in dropbear_ssh_pub_keys_admin_options %}
+			{{- comma() }}{{ option }}
+		{%- endfor %}
+		{{- " " }}
+	{%- endif %}
+	{{- ssh_key }}
 {% endfor %}
 
 ## Unlock-only keys
-{% for path in dropbear_ssh_pub_keys_unlock %}
-command="/usr/bin/cryptroot-unlock",no-port-forwarding,no-X11-forwarding {{ lookup('ansible.builtin.file', path) }}
+{% set has_unlock_options = dropbear_ssh_pub_keys_unlock_options is sequence and dropbear_ssh_pub_keys_unlock_options | length > 0 %}
+{% for ssh_key in dropbear_ssh_pub_keys_unlock %}
+	{%- if has_unlock_options %}
+		{%- set comma = joiner(',') %}
+		{%- for option in dropbear_ssh_pub_keys_unlock_options %}
+			{{- comma() }}{{ option }}
+		{%- endfor %}
+		{{- " " }}
+	{%- endif %}
+	{{- ssh_key }}
 {% endfor %}

@@ -5,19 +5,26 @@
 #
 # SPDX-License-Identifier: CC0-1.0
 
-# List of paths to SSH public keys that can login with forced command only
+# List of SSH public key strings that can login with forced command only
 # for unlocking
-dropbear_ssh_pub_keys_unlock: [
-  #"~/.ssh/id_rsa.pub",
-  #"~/.ssh/id_ed25519.pub",
-]
+dropbear_ssh_pub_keys_unlock: []
+  #- ssh-rsa AAAAB3NzaC1yc2E...
 
-# List of paths to SSH public keys that can login to shell prompt
+# See "AUTHORIZED_KEYS FILE FORMAT" section in sshd(8) man page
+dropbear_ssh_pub_keys_unlock_options:
+  - command=/usr/bin/cryptroot-unlock
+  - no-port-forwarding
+  - no-X11-forwarding
+  - no-pty
+  - no-agent-forwarding
+
+# List of SSH public key strings that can login to shell prompt
 # (no forced command)
-dropbear_ssh_pub_keys_admin: [
-  #"~/.ssh/id_rsa.pub",
-  #"~/.ssh/id_ed25519.pub",
-]
+dropbear_ssh_pub_keys_admin: []
+  #- ssh-rsa AAAAB3NzaC1yc2E...
+
+# See "AUTHORIZED_KEYS FILE FORMAT" section in sshd(8) man page
+dropbear_ssh_pub_keys_admin_options: []
 
 # SSH port that Dropbear should listen on during LUKS boot
 dropbear_port: 1024
