@@ -25,3 +25,7 @@ private/
 # IDEs
 .vscode/
 .idea/
+
+# NPM
+node_modules/
+package-lock.json

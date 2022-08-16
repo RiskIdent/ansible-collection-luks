@@ -50,6 +50,6 @@
   ansible.builtin.template:
     src: authorized_keys.j2
     dest: "{{ dropbear_path_authorized_keys }}"
+    mode: 0644
   notify:
     - Update initramfs
-

@@ -20,3 +20,23 @@
 
 - name: Update initramfs
   ansible.builtin.command: update-initramfs -u
+
+- name: Extract downloaded tarball
+  block:
+    - name: Cleanup previous files
+      ansible.builtin.file:
+        path: /opt/initramfs-tools-network-hook
+        state: absent
+
+      # We must extract the entire repository to ensure we include the LICENSE file
+    - name: Unarchive git repo into /opt/initramfs-tools-network-hook
+      ansible.builtin.unarchive:
+        remote_src: yes
+        src: /opt/initramfs-tools-network-hook.tar.gz
+        dest: /opt
+        extra_opts: [
+          # trim away leading "initramfs-tools-network-hook-${ git branch }/" prefix
+          --transform, "s|initramfs-tools-network-hook-[^/]*/|initramfs-tools-network-hook/|",
+          # skips root directory, and only extract files inside the dir
+          --wildcards, "initramfs-tools-network-hook-*/*",
+        ]

@@ -34,4 +34,3 @@ dropbear_port: 1024
 #   -k: Disable SSH remote port forwarding
 #   -s: Disable password logins / require SSH keys for authentication
 dropbear_options: "-jks"
-

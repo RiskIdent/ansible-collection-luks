@@ -34,28 +34,9 @@
     dest: /opt/initramfs-tools-network-hook.tar.gz
     # Checks if the downloaded file was actually changed
     checksum: "sha256:{{ lookup('url', initramfs_network_git_repo_tar_gz, split_lines=False) | hash('sha256') }}"
-  register: download_status
-
-- name: Extract downloaded tarball
-  when: download_status.changed
-  block:
-    - name: Cleanup previous files
-      ansible.builtin.file:
-        path: /opt/initramfs-tools-network-hook
-        state: absent
-
-      # We must extract the entire repository to ensure we include the LICENSE file
-    - name: Unarchive git repo into /opt/initramfs-tools-network-hook
-      ansible.builtin.unarchive:
-        remote_src: yes
-        src: /opt/initramfs-tools-network-hook.tar.gz
-        dest: /opt
-        extra_opts: [
-          # trim away leading "initramfs-tools-network-hook-${ git branch }/" prefix
-          --transform, "s|initramfs-tools-network-hook-[^/]*/|initramfs-tools-network-hook/|",
-          # skips root directory, and only extract files inside the dir
-          --wildcards, "initramfs-tools-network-hook-*/*",
-        ]
+    mode: 0644
+  notify:
+    - Extract downloaded tarball
 
 - name: Copy initramfs-tools-network-hook files
   ansible.builtin.copy:
@@ -84,5 +65,6 @@
   ansible.builtin.template:
     src: ri-bond-and-vlan.conf.j2
     dest: /etc/initramfs-tools/conf.d/ri-bond-and-vlan.conf
+    mode: 0644
   notify:
     - Update initramfs
