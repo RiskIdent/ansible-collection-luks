@@ -3,13 +3,20 @@
 # SPDX-License-Identifier: CC0-1.0
 
 .PHONY: deps
-deps: node_modules
+deps: deps-pip deps-npm
+
+.PHONY: deps-pip
+deps-pip:
+	pip install --user yamllint ansible-lint
+
+.PHONY: deps-npm
+deps-npm: node_modules
 
 node_modules:
 	npm install
 
 .PHONY: lint
-lint: lint-md
+lint: lint-md lint-yaml lint-ansible
 
 .PHONY: lint-fix
 lint-fix: lint-md-fix
@@ -22,3 +29,10 @@ lint-md: node_modules
 lint-md-fix: node_modules
 	npx remark . -o
 
+.PHONY: lint-yaml
+lint-yaml:
+	yamllint .
+
+.PHONY: lint-ansible
+lint-ansible:
+	ansible-lint roles

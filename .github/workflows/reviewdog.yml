@@ -30,4 +30,19 @@ jobs:
         with:
           github_token: ${{ secrets.github_token }}
           reporter: github-pr-review  # Change reporter.
-          yamllint_flags: 'src/'
+          yamllint_flags: '.'
+
+  ansible-lint:
+    name: runner / ansible-lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.6
+      - name: ansible-lint
+        uses: reviewdog/action-ansiblelint@v1
+        with:
+          github_token: ${{ secrets.github_token }}
+          reporter: github-pr-review # Change reporter.
+          ansiblelint_flags: 'roles/*'
