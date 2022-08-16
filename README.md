@@ -6,6 +6,8 @@ SPDX-License-Identifier: CC-BY-4.0
 
 # Ansible Collection - riskident.luks
 
+[![REUSE status](https://api.reuse.software/badge/github.com/RiskIdent/ansible-collection-luks)](https://api.reuse.software/info/github.com/RiskIdent/ansible-collection-luks)
+
 Ansible roles to install Dropbear and configure initramfs networking, a
 precondition for the action plugin `reboot_luks_ssh` to automatically reboot a
 machine with LUKS (Linux Unified Key Setup) full-disk encryption enabled.
