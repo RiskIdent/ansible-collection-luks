@@ -7,7 +7,7 @@ deps: deps-pip deps-npm
 
 .PHONY: deps-pip
 deps-pip:
-	pip install --user yamllint ansible-lint
+	pip install --user yamllint ansible-lint reuse
 
 .PHONY: deps-npm
 deps-npm: node_modules
@@ -16,7 +16,7 @@ node_modules:
 	npm install
 
 .PHONY: lint
-lint: lint-md lint-yaml lint-ansible
+lint: lint-md lint-yaml lint-ansible lint-license
 
 .PHONY: lint-fix
 lint-fix: lint-md-fix
@@ -36,3 +36,7 @@ lint-yaml:
 .PHONY: lint-ansible
 lint-ansible:
 	ansible-lint roles
+
+.PHONY: lint-license
+lint-license:
+	reuse lint
