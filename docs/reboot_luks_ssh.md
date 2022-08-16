@@ -34,7 +34,8 @@ the disk encryption password remotely.
   ansible requires to be able to contact the remote machine to gather facts and
   to just ping it to make sure it has SSH access.
 
-- Only supports one main encrypted partition. Subsequent LUKS decryptions can be chained using /etc/crypttab and key files on original encrypted partition.
+- Only supports one main encrypted partition. Subsequent LUKS decryptions can
+  be chained using `/etc/crypttab` and key files on original encrypted partition.
 
 - Does not distinguish connection errors with other SSH errors. E.g: if the
   `luks_ssh_private_key_file` points to a path that does not exist.
