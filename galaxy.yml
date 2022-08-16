@@ -1,0 +1,59 @@
+# SPDX-FileCopyrightText: 2022 Risk.Ident GmbH <contact@riskident.com>
+#
+# SPDX-License-Identifier: CC0-1.0
+
+namespace: riskident
+name: luks
+
+# The version of the collection. Must be compatible with semantic versioning
+version: 1.0.0
+
+readme: README.md
+
+# A list of the collection's content authors.
+# Can be just the name or even full multiline format, e.g:
+#   Full Name <email> (url)
+#   @nicks:irc/im.site#channel
+authors:
+- Kalle Fagerberg <kalle.fagerberg@riskident.com>
+
+description: Reboot and manage LUKS full-disk encrypted automatically.
+
+# Either a single license or a list of licenses for content inside of a collection. Ansible Galaxy currently only
+# accepts L(SPDX,https://spdx.org/licenses/) licenses. This key is mutually exclusive with 'license_file'
+license:
+  - GPL-3.0-or-later
+  - CC0-1.0
+  - CC-BY-4.0
+
+# A list of tags you want to associate with the collection for indexing/searching. A tag name has the same character
+# requirements as 'namespace' and 'name'
+tags:
+  - luks
+  - dropbear
+  - initramfs
+
+# Collections that this collection requires to be installed for it to be usable. The key of the dict is the
+# collection label 'namespace.name'. The value is a version range
+# L(specifiers,https://python-semanticversion.readthedocs.io/en/latest/#requirement-specification). Multiple version
+# range specifiers can be set and are separated by ','
+dependencies: {}
+
+# The URL of the originating SCM repository
+repository: https://github.com/RiskIdent/ansible-collection-luks
+
+# The URL to any online docs
+#documentation: http://docs.example.com
+
+# The URL to the homepage of the collection/project
+#homepage: http://example.com
+
+# The URL to the collection issue tracker
+issues: https://github.com/RiskIdent/ansible-collection-luks/issues
+
+# A list of file glob-like patterns used to filter any files or directories that should not be included in the build
+# artifact. A pattern is matched from the relative path of the file or directory of the collection directory. This
+# uses 'fnmatch' to match the files or directories. Some directories and files like 'galaxy.yml', '*.pyc', '*.retry',
+# and '.git' are always filtered
+build_ignore: []
+

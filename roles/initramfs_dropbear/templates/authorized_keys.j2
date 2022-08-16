@@ -1,0 +1,27 @@
+# {{ ansible_managed }}
+
+## Admin keys
+{% set has_admin_options = dropbear_ssh_pub_keys_admin_options is sequence and dropbear_ssh_pub_keys_admin_options | length > 0 %}
+{% for ssh_key in dropbear_ssh_pub_keys_admin %}
+	{%- if has_admin_options %}
+		{%- set comma = joiner(',') %}
+		{%- for option in dropbear_ssh_pub_keys_admin_options %}
+			{{- comma() }}{{ option }}
+		{%- endfor %}
+		{{- " " }}
+	{%- endif %}
+	{{- ssh_key }}
+{% endfor %}
+
+## Unlock-only keys
+{% set has_unlock_options = dropbear_ssh_pub_keys_unlock_options is sequence and dropbear_ssh_pub_keys_unlock_options | length > 0 %}
+{% for ssh_key in dropbear_ssh_pub_keys_unlock %}
+	{%- if has_unlock_options %}
+		{%- set comma = joiner(',') %}
+		{%- for option in dropbear_ssh_pub_keys_unlock_options %}
+			{{- comma() }}{{ option }}
+		{%- endfor %}
+		{{- " " }}
+	{%- endif %}
+	{{- ssh_key }}
+{% endfor %}

@@ -1,0 +1,37 @@
+---
+# defaults file for initramfs_dropbear
+#
+# SPDX-FileCopyrightText: 2022 Risk.Ident GmbH <contact@riskident.com>
+#
+# SPDX-License-Identifier: CC0-1.0
+
+# List of SSH public key strings that can login with forced command only
+# for unlocking
+dropbear_ssh_pub_keys_unlock: []
+  #- ssh-rsa AAAAB3NzaC1yc2E...
+
+# See "AUTHORIZED_KEYS FILE FORMAT" section in sshd(8) man page
+dropbear_ssh_pub_keys_unlock_options:
+  - command=/usr/bin/cryptroot-unlock
+  - no-port-forwarding
+  - no-X11-forwarding
+  - no-pty
+  - no-agent-forwarding
+
+# List of SSH public key strings that can login to shell prompt
+# (no forced command)
+dropbear_ssh_pub_keys_admin: []
+  #- ssh-rsa AAAAB3NzaC1yc2E...
+
+# See "AUTHORIZED_KEYS FILE FORMAT" section in sshd(8) man page
+dropbear_ssh_pub_keys_admin_options: []
+
+# SSH port that Dropbear should listen on during LUKS boot
+dropbear_port: 1024
+
+# Additional DROPBEAR_OPTIONS values. Recommended: -j, -k, and -s:
+#   -j: Disable SSH local port forwarding
+#   -k: Disable SSH remote port forwarding
+#   -s: Disable password logins / require SSH keys for authentication
+dropbear_options: "-jks"
+

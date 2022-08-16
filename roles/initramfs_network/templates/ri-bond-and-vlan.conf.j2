@@ -1,0 +1,50 @@
+# {{ ansible_managed }}
+
+{#
+	Docs for BOND_MODE, BOND, and VLAN vars:
+	https://github.com/stcz/initramfs-tools-network-hook
+#}
+BOND_MODE="{{ initramfs_network_bond_driver_options }}"
+
+{% set has_bonds = initramfs_network_bonds is sequence and initramfs_network_bonds | length > 0 %}
+{% if has_bonds %}
+{% set space = joiner(' ') %}
+BOND="
+{%- for bond in initramfs_network_bonds %}
+	{{- space() }}
+	{{- bond.name }}:
+	{{- bond.interfaces | join(',') }}
+	{%- if bond.mac is defined %}:
+		{{- bond.mac | replace(':', '-') }}
+	{%- endif %}
+{%- endfor %}"
+{% endif %}
+
+{% set has_vlans = initramfs_network_vlans is sequence and initramfs_network_vlans | length > 0 %}
+{% if has_vlans %}
+{% set space = joiner(' ') %}
+VLAN="
+{%- for vlan in initramfs_network_vlans %}
+	{{- space() }}
+	{{- vlan.link }}:{{ vlan.id }}
+{%- endfor %}"
+{%- endif %}
+
+{% set has_device_ips = initramfs_network_device_ips is sequence and initramfs_network_device_ips | length > 0 %}
+{% if has_device_ips %}
+{%- set space = joiner(' ') %}
+IP_ADDR="
+{%- for device_ip in initramfs_network_device_ips %}
+	{{- space() }}
+	{{- device_ip.name }}:
+	{{- device_ip.get("cidr") }}:
+	{{- device_ip.get("gateway_ip") }}
+{%- endfor %}"
+{%- endif %}
+
+# Dropbear skips starting up if IP=off or IP=none.
+# We are configuring it manually via IP_ADDR,
+# and "done" will also make configure_network to skip it while not skipping Dropbear
+IP="done"
+IP6="done"
+

@@ -1,0 +1,55 @@
+---
+# tasks file for initramfs_dropbear
+#
+# SPDX-FileCopyrightText: 2022 Risk.Ident GmbH <contact@riskident.com>
+#
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# This program is free software: you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by the
+# Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+# more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+- name: Install dropbear-initramfs
+  ansible.builtin.apt:
+    name: dropbear-initramfs
+
+- name: Set Dropbear paths
+  ansible.builtin.set_fact:
+    dropbear_path_config: /etc/dropbear/initramfs/dropbear.conf
+    dropbear_path_authorized_keys: /etc/dropbear/initramfs/authorized_keys
+
+- name: Check status of outdated Dropbear config path
+  ansible.builtin.stat:
+    path: /etc/dropbear-initramfs/config
+  register: old_dropbear_config
+
+- name: Set old Dropbear paths
+  ansible.builtin.set_fact:
+    dropbear_path_config: /etc/dropbear-initramfs/config
+    dropbear_path_authorized_keys: /etc/dropbear-initramfs/authorized_keys
+  when: old_dropbear_config.stat.exists
+
+- name: Update Dropbear options
+  ansible.builtin.lineinfile:
+    path: "{{ dropbear_path_config }}"
+    regexp: '^#?DROPBEAR_OPTIONS='
+    line: 'DROPBEAR_OPTIONS="-p {{ dropbear_port }} {{ dropbear_options }}"'
+  notify:
+    - Update initramfs
+
+- name: Update Dropbear SSH authorized_keys
+  ansible.builtin.template:
+    src: authorized_keys.j2
+    dest: "{{ dropbear_path_authorized_keys }}"
+  notify:
+    - Update initramfs
+

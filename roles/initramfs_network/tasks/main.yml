@@ -1,0 +1,88 @@
+---
+# tasks file for initramfs_network
+#
+# SPDX-FileCopyrightText: 2022 Risk.Ident GmbH <contact@riskident.com>
+#
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# This program is free software: you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by the
+# Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+# more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+- name: Install vlan for initramfs vlan support
+  ansible.builtin.apt:
+    name: vlan
+  when: initramfs_network_install_vlan
+
+- name: Install iproute2 for initramfs bond support
+  ansible.builtin.apt:
+    name: iproute2
+  when: initramfs_network_install_iproute2
+
+- name: Download git repo to /opt/initramfs-tools-network-hook.tar.gz
+  ansible.builtin.get_url:
+    url: "{{ initramfs_network_git_repo_tar_gz }}"
+    dest: /opt/initramfs-tools-network-hook.tar.gz
+    # Checks if the downloaded file was actually changed
+    checksum: "sha256:{{ lookup('url', initramfs_network_git_repo_tar_gz, split_lines=False) | hash('sha256') }}"
+  register: download_status
+
+- name: Extract downloaded tarball
+  when: download_status.changed
+  block:
+    - name: Cleanup previous files
+      ansible.builtin.file:
+        path: /opt/initramfs-tools-network-hook
+        state: absent
+
+      # We must extract the entire repository to ensure we include the LICENSE file
+    - name: Unarchive git repo into /opt/initramfs-tools-network-hook
+      ansible.builtin.unarchive:
+        remote_src: yes
+        src: /opt/initramfs-tools-network-hook.tar.gz
+        dest: /opt
+        extra_opts: [
+          # trim away leading "initramfs-tools-network-hook-${ git branch }/" prefix
+          --transform, "s|initramfs-tools-network-hook-[^/]*/|initramfs-tools-network-hook/|",
+          # skips root directory, and only extract files inside the dir
+          --wildcards, "initramfs-tools-network-hook-*/*",
+        ]
+
+- name: Copy initramfs-tools-network-hook files
+  ansible.builtin.copy:
+    src: "/opt/initramfs-tools-network-hook/etc/initramfs-tools/{{ item }}/"
+    dest: "/etc/initramfs-tools/{{ item }}/"
+    remote_src: yes
+    mode: 0755
+  # The recursive copy of ansible.builtin.copy doesn't seem to work with
+  # multiple dirs with more than 1 in depth.
+  # Initially it only copied the hooks on the first run,
+  # and copies the scripts on the second run when the hooks already exist.
+  # Don't know if it's a bug, but here's a workaround:
+  loop: [ hooks, scripts ]
+  notify:
+    - Update initramfs
+
+- name: Update initramfs-tools/scripts/local-top/ipaddr file
+  ansible.builtin.copy:
+    src: files/scripts/local-top/ipaddr
+    dest: /etc/initramfs-tools/scripts/local-top/ipaddr
+    mode: 0755
+  notify:
+    - Update initramfs
+
+- name: Update initramfs-tools/conf.d/ri-bond-and-vlan.conf
+  ansible.builtin.template:
+    src: ri-bond-and-vlan.conf.j2
+    dest: /etc/initramfs-tools/conf.d/ri-bond-and-vlan.conf
+  notify:
+    - Update initramfs
