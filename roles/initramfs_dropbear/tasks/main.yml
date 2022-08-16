@@ -52,4 +52,3 @@
     dest: "{{ dropbear_path_authorized_keys }}"
   notify:
     - Update initramfs
-
