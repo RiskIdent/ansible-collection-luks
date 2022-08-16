@@ -16,8 +16,11 @@ This repository complies with the [REUSE recommendations](https://reuse.software
 
 Different licenses are used for different files. In general:
 
-- Code, such as Ansible roles and action plugins are licensed under GNU General Public License v3.0 or later ([LICENSES/GPL-3.0-or-later.txt](LICENSES/GPL-3.0-or-later.txt)).
+- Code, such as Ansible roles and action plugins are licensed under
+  GNU General Public License v3.0 or later ([LICENSES/GPL-3.0-or-later.txt](LICENSES/GPL-3.0-or-later.txt)).
+
 - Documentation licensed under Creative Commons Attribution 4.0 International ([LICENSES/CC-BY-4.0.txt](LICENSES/CC-BY-4.0.txt)).
+
 - Miscellaneous files, e.g `.gitignore`, are licensed under CC0 1.0 Universal ([LICENSES/CC0-1.0.txt](LICENSES/CC0-1.0.txt)).
 
 Please see each file's header or accompanied `.license` file for specifics.

@@ -35,7 +35,8 @@ the disk encryption password remotely.
   to just ping it to make sure it has SSH access.
 
 - Only supports one main encrypted partition. Subsequent LUKS decryptions can
-  be chained using `/etc/crypttab` and key files on original encrypted partition.
+  be chained using `/etc/crypttab` and key files on original encrypted
+  partition.
 
 - Does not distinguish connection errors with other SSH errors. E.g: if the
   `luks_ssh_private_key_file` points to a path that does not exist.
@@ -113,6 +114,7 @@ In addition, `reboot_luks_ssh` also defines some additional parameters:
 
 ### Optional parameters
 
+<!--lint disable maximum-line-length-->
 | Parameter                 | Type   | Default | Comments |
 | ------------------------- | ------ | ------- | -------- |
 | luks_ssh_port             | int    | `1024` | SSH port of target machine when in LUKS boot (Dropbear)
@@ -123,6 +125,7 @@ In addition, `reboot_luks_ssh` also defines some additional parameters:
 | luks_ssh_timeout          | int    | reboot_timeout (`ansible.builtin.reboot` param) | Connection timeout (in seconds) for all connection retries in total, including the wait time between the retries.
 | luks_ssh_options          | list\[string\] | `[]` | Additional arbitrary SSH options used when connecting to LUKS boot (Dropbear), such as `PubkeyAcceptedKeyTypes`
 | post_unlock_delay         | int    | `0` | Time to wait (in seconds) after a successful LUKS unlock.
+<!--lint enable maximum-line-length-->
 
 ## Example Playbook
 
@@ -155,16 +158,20 @@ In addition, `reboot_luks_ssh` also defines some additional parameters:
 Same return values as `ansible.builtin.reboot`:
 <https://docs.ansible.com/ansible/latest/collections/ansible/builtin/reboot_module.html#return-values>
 
+<!--lint disable maximum-line-length-->
 | Key      | Type    | Sample | Returned | Description |
 | -------- | ------- | ------ | -------- | ----------- |
 | elapsed  | int     | `23`   | always   | The number of seconds that elapsed waiting for the system to be rebooted.
 | rebooted | boolean | `true` | always   | true if the machine was rebooted.
+<!--lint enable maximum-line-length-->
 
 In addition, `reboot_luks_ssh` also defines some additional return values:
 
+<!--lint disable maximum-line-length-->
 | Key      | Type    | Sample | Returned | Description |
 | -------- | ------- | ------ | -------- | ----------- |
 | unlocked | boolean | `true` | always   | true if the disk encryption was unlocked.
+<!--lint enable maximum-line-length-->
 
 ## Author Information
 
