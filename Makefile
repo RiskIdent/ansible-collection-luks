@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2022 Risk.Ident GmbH <contact@riskident.com>
+#
+# SPDX-License-Identifier: CC0-1.0
 
 .PHONY: deps
 deps: node_modules
