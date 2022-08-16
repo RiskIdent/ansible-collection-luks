@@ -1,4 +1,5 @@
 {
+  "remarkConfig": ".remarkrc",
   "dependencies": {
     "remark-cli": "^9.0.0",
     "remark-lint": "^8.0.0",
