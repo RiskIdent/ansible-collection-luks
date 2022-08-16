@@ -34,7 +34,7 @@ the disk encryption password remotely.
   ansible requires to be able to contact the remote machine to gather facts and
   to just ping it to make sure it has SSH access.
 
-- Only supports one main encrypted partition.
+- Only supports one main encrypted partition. Subsequent LUKS decryptions can be chained using /etc/crypttab and key files on original encrypted partition.
 
 - Does not distinguish connection errors with other SSH errors. E.g: if the
   `luks_ssh_private_key_file` points to a path that does not exist.
@@ -88,7 +88,7 @@ to restrict the SSH access, for security reasons.
 E.g:
 
 ```text
-command="/usr/bin/cryptroot-unlock",no-port-forwarding,no-X11-forwarding ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCctMnwxmy0Gme1fSzAjm38caHgv54YBdAh+G1zbhTKa96xJUdZ5mJGfFL07z49RwKDeg3v8xpx1EpW7FxSKPFjMeIkVIFnblqRCG3+IEN8ngXpL81HudoWEpRrcq/Q1puxUsNmrROqbD9IaVIUPvcyyeVWo/aD97V3OxvDUmEDsuuLaMortcIGAhgbIjjymKxy6gE7RQaFSeX+ql8WkpsxC/Fa3mM83oy8k+8nxw89mBgXeF6wMcbcuujFIJLQduvdVbL5r0Go8Z3DKTwIR1OzGqlKgeAyuE6L3QZ4IWqu1RlcfJGrE0jSZ/ZGFotikzM8K/KtQZoQJLv1tHepenqXNE6ztyNd2VCgwGnhLxnGrjc91YBi/lnxTr9xEF1RqFyf+nKTcbsuz4/QghXejF4e1vGxiCj+SiEi/XryG32p8T8zO+X+8Ymp2oZo9QxoD5RQmL0VgfXePR3AO62hVIM9wIQlHCT1qlXbMrzRXVjvsCIrD6NGTncOF/d0tsFudtU= Sample RSA key to access LUKS boot
+command="/usr/bin/cryptroot-unlock",no-port-forwarding,no-X11-forwarding,no-pty ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCctMnwxmy0Gme1fSzAjm38caHgv54YBdAh+G1zbhTKa96xJUdZ5mJGfFL07z49RwKDeg3v8xpx1EpW7FxSKPFjMeIkVIFnblqRCG3+IEN8ngXpL81HudoWEpRrcq/Q1puxUsNmrROqbD9IaVIUPvcyyeVWo/aD97V3OxvDUmEDsuuLaMortcIGAhgbIjjymKxy6gE7RQaFSeX+ql8WkpsxC/Fa3mM83oy8k+8nxw89mBgXeF6wMcbcuujFIJLQduvdVbL5r0Go8Z3DKTwIR1OzGqlKgeAyuE6L3QZ4IWqu1RlcfJGrE0jSZ/ZGFotikzM8K/KtQZoQJLv1tHepenqXNE6ztyNd2VCgwGnhLxnGrjc91YBi/lnxTr9xEF1RqFyf+nKTcbsuz4/QghXejF4e1vGxiCj+SiEi/XryG32p8T8zO+X+8Ymp2oZo9QxoD5RQmL0VgfXePR3AO62hVIM9wIQlHCT1qlXbMrzRXVjvsCIrD6NGTncOF/d0tsFudtU= Sample RSA key to access LUKS boot
 ```
 
 Don't forget to refresh the LUKS boot:
