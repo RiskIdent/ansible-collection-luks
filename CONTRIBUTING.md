@@ -37,10 +37,9 @@ SPDX-License-Identifier: CC-BY-4.0
 
 4. Wait until after PR has been merged into `main` before continuing.
 
-5. Build the collection tarball.
+5. Build the collection tarball. Do make sure you're on the latest commit first.
 
    ```console
-   Always good practice to make sure you're on the latest commit:
    $ git checkout main
    $ git pull
 
