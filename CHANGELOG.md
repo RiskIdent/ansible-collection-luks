@@ -1,3 +1,9 @@
+<!--
+SPDX-FileCopyrightText: 2022 Risk.Ident GmbH <contact@riskident.com>
+
+SPDX-License-Identifier: CC-BY-4.0
+-->
+
 # Risk.Ident's LUKS Ansible collection changelog
 
 This project tries to follow [SemVer 2.0.0](https://semver.org/).

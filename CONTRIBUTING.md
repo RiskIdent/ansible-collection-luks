@@ -1,3 +1,9 @@
+<!--
+SPDX-FileCopyrightText: 2022 Risk.Ident GmbH <contact@riskident.com>
+
+SPDX-License-Identifier: CC-BY-4.0
+-->
+
 # Contributing guide
 
 ## Adding changes
@@ -30,7 +36,7 @@
 
 4. Wait until after PR has been merged into `main` before continuing.
 
-4. Build the collection tarball.
+5. Build the collection tarball.
 
    ```console
    Always good practice to make sure you're on the latest commit:
@@ -43,11 +49,11 @@
    Created collection for riskident.luks at riskident-luks-0.1.0.tar.gz
    ```
 
-3. Upload tarball to Ansible Galaxy namespace [`riskident`](https://galaxy.ansible.com/riskident).
+6. Upload tarball to Ansible Galaxy namespace [`riskident`](https://galaxy.ansible.com/riskident).
 
    Can be done via command line or via website. Docs: <https://docs.ansible.com/ansible/devel/dev_guide/developing_collections_distributing.html#publishing-your-collection>
 
-4. Create release: <https://github.com/RiskIdent/ansible-collection-luks/releases/new>
+7. Create release: <https://github.com/RiskIdent/ansible-collection-luks/releases/new>
 
    - "Choose a tag": enter version, e.g `0.1.0`, and click
      <kbd>+ Create new tag: 0.1.0 on publish</kbd>

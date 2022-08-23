@@ -36,11 +36,11 @@ lint-fix: lint-md-fix
 
 .PHONY: lint-md
 lint-md: node_modules
-	npx remark .
+	npx remark . .github
 
 .PHONY: lint-md-fix
 lint-md-fix: node_modules
-	npx remark . -o
+	npx remark . .github -o
 
 .PHONY: lint-yaml
 lint-yaml:
