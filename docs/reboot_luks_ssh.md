@@ -51,7 +51,7 @@ password remotely.
 Such as by using [Dropbear](https://matt.ucc.asn.au/dropbear/dropbear.html).
 
 A role to install Dropbear into the initramfs can be found at
-[../../roles/initramfs_dropbear](../../roles/initramfs_dropbear/README.md)
+[../../roles/initramfs\_dropbear](../../roles/initramfs_dropbear/README.md)
 
 ### Installing Dropbear
 
@@ -108,23 +108,25 @@ In addition, `reboot_luks_ssh` also defines some additional parameters:
 
 ### Required parameters
 
-| Parameter     | Type   | Comments |
-| ------------- | ------ | -------- |
-| luks_password | string | LUKS disk encryption password.
+| Parameter      | Type   | Comments |
+| -------------  | ------ | -------- |
+| luks\_password | string | LUKS disk encryption password.
 
 ### Optional parameters
 
 <!--lint disable maximum-line-length-->
-| Parameter                 | Type   | Default | Comments |
-| ------------------------- | ------ | ------- | -------- |
-| luks_ssh_port             | int    | `1024` | SSH port of target machine when in LUKS boot (Dropbear)
-| luks_ssh_user             | string | `"root"` | SSH username used when connecting to LUKS boot (Dropbear)
-| luks_ssh_private_key_file | string | ansible_ssh_private_key_file (inventory param) | Path of SSH private key file, e.g `/home/ubuntu/.ssh/id_rsa`
-| luks_ssh_executable       | string | ansible_ssh_executable (inventory param), or `"ssh"` | Command name of SSH executable used when connecting to LUKS boot (Dropbear)
-| luks_ssh_connect_timeout  | int    | connect_timeout (`ansible.builtin.reboot` param), or `600` | Connection timeout (in seconds) used when connecting to LUKS boot (Dropbear)
-| luks_ssh_timeout          | int    | reboot_timeout (`ansible.builtin.reboot` param) | Connection timeout (in seconds) for all connection retries in total, including the wait time between the retries.
-| luks_ssh_options          | list\[string\] | `[]` | Additional arbitrary SSH options used when connecting to LUKS boot (Dropbear), such as `PubkeyAcceptedKeyTypes`
-| post_unlock_delay         | int    | `0` | Time to wait (in seconds) after a successful LUKS unlock.
+
+| Parameter                   | Type   | Default | Comments |
+| -------------------------   | ------ | ------- | -------- |
+| `luks_ssh_port`             | int    | `1024` | SSH port of target machine when in LUKS boot (Dropbear)
+| `luks_ssh_user`             | string | `"root"` | SSH username used when connecting to LUKS boot (Dropbear)
+| `luks_ssh_private_key_file` | string | `ansible_ssh_private_key_file` (inventory param) | Path of SSH private key file, e.g `/home/ubuntu/.ssh/id_rsa`
+| `luks_ssh_executable`       | string | `ansible_ssh_executable` (inventory param), or `"ssh"` | Command name of SSH executable used when connecting to LUKS boot (Dropbear)
+| `luks_ssh_connect_timeout`  | int    | `connect_timeout` (`ansible.builtin.reboot` param), or `600` | Connection timeout (in seconds) used when connecting to LUKS boot (Dropbear)
+| `luks_ssh_timeout`          | int    | `reboot_timeout` (`ansible.builtin.reboot` param) | Connection timeout (in seconds) for all connection retries in total, including the wait time between the retries.
+| `luks_ssh_options`          | list\[string] | `[]` | Additional arbitrary SSH options used when connecting to LUKS boot (Dropbear), such as `PubkeyAcceptedKeyTypes`
+| `post_unlock_delay`         | int    | `0` | Time to wait (in seconds) after a successful LUKS unlock.
+
 <!--lint enable maximum-line-length-->
 
 ## Example Playbook
@@ -159,18 +161,22 @@ Same return values as `ansible.builtin.reboot`:
 <https://docs.ansible.com/ansible/latest/collections/ansible/builtin/reboot_module.html#return-values>
 
 <!--lint disable maximum-line-length-->
+
 | Key      | Type    | Sample | Returned | Description |
 | -------- | ------- | ------ | -------- | ----------- |
 | elapsed  | int     | `23`   | always   | The number of seconds that elapsed waiting for the system to be rebooted.
 | rebooted | boolean | `true` | always   | true if the machine was rebooted.
+
 <!--lint enable maximum-line-length-->
 
 In addition, `reboot_luks_ssh` also defines some additional return values:
 
 <!--lint disable maximum-line-length-->
+
 | Key      | Type    | Sample | Returned | Description |
 | -------- | ------- | ------ | -------- | ----------- |
 | unlocked | boolean | `true` | always   | true if the disk encryption was unlocked.
+
 <!--lint enable maximum-line-length-->
 
 ## Author Information

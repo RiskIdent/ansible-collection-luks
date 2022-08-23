@@ -55,9 +55,6 @@ SPDX-License-Identifier: CC-BY-4.0
 
 7. Create release: <https://github.com/RiskIdent/ansible-collection-luks/releases/new>
 
-   - "Choose a tag": enter version, e.g `0.1.0`, and click
-     <kbd>+ Create new tag: 0.1.0 on publish</kbd>
-
+   - "Choose a tag": enter version, e.g `0.1.0`, and click <kbd>+ Create new tag: 0.1.0 on publish</kbd>
    - Paste the release notes from the `CHANGELOG.md` into the description
-
    - Click <kbd>Publish release</kbd>

@@ -40,7 +40,7 @@ lint-md: node_modules
 
 .PHONY: lint-md-fix
 lint-md-fix: node_modules
-	npx remark . .github -o
+	npx remark . -o
 
 .PHONY: lint-yaml
 lint-yaml:
