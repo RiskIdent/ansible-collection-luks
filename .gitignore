@@ -29,3 +29,6 @@ private/
 # NPM
 node_modules/
 package-lock.json
+
+# Built Ansible Galaxy collections
+riskident-luks-*.tar.gz

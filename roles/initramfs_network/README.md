@@ -4,7 +4,7 @@ SPDX-FileCopyrightText: 2022 Risk.Ident GmbH <contact@riskident.com>
 SPDX-License-Identifier: CC-BY-4.0
 -->
 
-# initramfs_network
+# initramfs\_network
 
 Installs initramfs-tools-network-hook (<https://github.com/stcz/initramfs-tools-network-hook>)
 to configure "bond" and "vlan" devices in an initramfs boot partition, as well

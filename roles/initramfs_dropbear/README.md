@@ -4,7 +4,7 @@ SPDX-FileCopyrightText: 2022 Risk.Ident GmbH <contact@riskident.com>
 SPDX-License-Identifier: CC-BY-4.0
 -->
 
-# initramfs_dropbear
+# initramfs\_dropbear
 
 Installs Dropbear, a lightweight SSH server, into the initramfs boot partition.
 
