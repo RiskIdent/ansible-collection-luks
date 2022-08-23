@@ -2,6 +2,19 @@
 #
 # SPDX-License-Identifier: CC0-1.0
 
+VERSION=$(shell grep '^version:' galaxy.yml | grep -o '[0-9\.]*')
+
+.PHONY: build
+build: riskident-luks-${VERSION}.tar.gz
+
+riskident-luks-${VERSION}.tar.gz: galaxy.yml roles/** plugins/** docs/**
+	@echo "Building ${VERSION}"
+	ansible-galaxy collection build --force
+
+.PHONY: clean
+clean:
+	rm -rfv riskident-luks-*.tar.gz
+
 .PHONY: deps
 deps: deps-pip deps-npm
 

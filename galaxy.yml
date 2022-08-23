@@ -6,7 +6,7 @@ namespace: riskident
 name: luks
 
 # The version of the collection. Must be compatible with semantic versioning
-version: 1.0.0
+version: 0.1.0
 
 readme: README.md
 
@@ -55,4 +55,13 @@ issues: https://github.com/RiskIdent/ansible-collection-luks/issues
 # artifact. A pattern is matched from the relative path of the file or directory of the collection directory. This
 # uses 'fnmatch' to match the files or directories. Some directories and files like 'galaxy.yml', '*.pyc', '*.retry',
 # and '.git' are always filtered
-build_ignore: []
+build_ignore:
+  - .github
+  - .remarkrc
+  - .remarkrc.license
+  - .yamllint.yml
+  - Makefile
+  - node_modules
+  - package-lock.json
+  - package.json
+  - package.json.license
