@@ -20,6 +20,9 @@ This project tries to follow [SemVer 2.0.0](https://semver.org/).
 
 - Added `meta/runtime.yml` (#7)
 
+- Fixed missing quotes in `dropbear_ssh_pub_keys_unlock_options` default SSH
+  restriction command in `initramfs_dropbear` role. (#8)
+
 ## v0.1.0 (2022-08-23)
 
 - Added repository to GitHub, moved from our closed-source internal repo. (#1)
