@@ -16,6 +16,6 @@ This project tries to follow [SemVer 2.0.0](https://semver.org/).
 	https://changelog.md/
 -->
 
-## v0.1.0 (WIP)
+## v0.1.0 (2022-08-23)
 
 - Added repository to GitHub, moved from our closed-source internal repo. (#1)
