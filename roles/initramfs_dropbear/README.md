@@ -32,6 +32,7 @@ See [`./defaults/main.yml`](./defaults/main.yml)
 
 ```yaml
 - hosts: servers
+  become: yes
   roles:
      - { role: initramfs_dropbear, tags: initramfs_dropbear }
 ```
