@@ -10,7 +10,8 @@ SPDX-License-Identifier: CC-BY-4.0
 
 1. Make your changes in a new branch
 
-2. Update [`CHANGELOG.md`](./CHANGELOG.md)
+2. Update [`CHANGELOG.md`](./CHANGELOG.md), if the change is user-affecting
+   (docs changes or lint fixes don't have to cause changelog/version bumps)
 
    - Ensure correct version bump to a `(WIP)` (Work In Progress) version.
 
