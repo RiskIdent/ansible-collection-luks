@@ -12,7 +12,9 @@ dropbear_ssh_pub_keys_unlock: []
 
 # See "AUTHORIZED_KEYS FILE FORMAT" section in sshd(8) man page
 dropbear_ssh_pub_keys_unlock_options:
-  - command=/usr/bin/cryptroot-unlock
+  # Argument (the part after the equal sign =)
+  # must be quoted even if it doesn't contain any spaces.
+  - 'command="/usr/bin/cryptroot-unlock"'
   - no-port-forwarding
   - no-X11-forwarding
   - no-pty

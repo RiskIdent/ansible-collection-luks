@@ -35,8 +35,6 @@ initramfs_network_bonds:
 #  - name: bond1
 #    interfaces: [ eth2, eth3 ]
 #    mac: aa:bb:cc:dd:ee:ff
-#    addr_cidr: 192.168.123.44/24
-#    gateway_ip: 192.168.123.1
 
 # Bonding driver options.
 # https://wiki.linuxfoundation.org/networking/bonding#bonding_driver_options
