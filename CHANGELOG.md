@@ -18,6 +18,8 @@ This project tries to follow [SemVer 2.0.0](https://semver.org/).
 
 ## v0.1.1 (WIP)
 
+- Added `meta/runtime.yml` (#7)
+
 - Added `become: yes` to documentation, as all this collection's roles and
   action plugins need it. (#9)
 
