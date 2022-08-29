@@ -26,6 +26,8 @@ This project tries to follow [SemVer 2.0.0](https://semver.org/).
 - Added `become: yes` to documentation, as all this collection's roles and
   action plugins need it. (#9)
 
+- Added docs to introduce action plugin and roles to README.md (#11)
+
 ## v0.1.0 (2022-08-23)
 
 - Added repository to GitHub, moved from our closed-source internal repo. (#1)
