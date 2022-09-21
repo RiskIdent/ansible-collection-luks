@@ -8,7 +8,7 @@
 # Network devices IP addresses
 #   FIELD       TYPE    DESCRIPTION
 #   name        string  Network device (interface or VLAN) name
-#   addr_cidr   string  (optional) IPv4 address and netmask, CIDR notation
+#   cidr        string  (optional) IPv4 address and netmask, CIDR notation
 #   gateway_ip  string  (optional) IPv4 address of gateway
 initramfs_network_device_ips: null
 # Examples:
