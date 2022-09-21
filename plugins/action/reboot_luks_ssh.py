@@ -204,7 +204,7 @@ class ActionModule(RebootActionModule):
                 # SSH connection error; the machine is probably still booting.
                 # Could also be any other SSH client errors, but we cannot
                 # know that.
-                display.vvv("{action}: LUKS SSH connection fail, output:\n\t{output}".format(
+                display.warning("{action}: LUKS SSH connection fail (non-fatal, will attempt multiple times), output:\n\t{output}".format(
                     action=self._task.action, output=e.output.replace("\n", "\n\t")))
             else:
                 display.warning("{action}: LUKS unlock disk-encryption via SSH prompt failed, output:\n{output}".format(
