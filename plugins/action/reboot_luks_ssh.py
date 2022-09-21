@@ -268,6 +268,22 @@ class ActionModule(RebootActionModule):
         return result
 
     def run(self, tmp=None, task_vars=None):
+        self._supports_check_mode = True
+        self._supports_async = True
+
+        # If running with local connection, fail so we don't reboot ourself
+        if self._connection.transport == 'local':
+            msg = 'Running {0} with local connection would reboot the control node.'.format(self._task.action)
+            return {'changed': False, 'elapsed': 0, 'rebooted': False, 'failed': True, 'unlocked': False, 'msg': msg}
+
+        if self._play_context.check_mode:
+            return {'changed': True, 'elapsed': 0, 'rebooted': True, 'unlocked': True}
+
+        if task_vars is None:
+            task_vars = {}
+
+        self.deprecated_args()
+
         result = super(RebootActionModule, self).run(tmp, task_vars)
         if result.get('skipped') or result.get('failed'):
             return result
