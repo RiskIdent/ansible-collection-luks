@@ -24,14 +24,17 @@
 # taken at 2022-06-08.
 
 from datetime import datetime
-import subprocess
-import time
-import tempfile
 import os
+import subprocess
+import tempfile
+import time
 
 from ansible.errors import AnsibleActionFail
 from ansible.module_utils._text import to_text
-from ansible.plugins.action.reboot import ActionModule as RebootActionModule, TimedOutException
+from ansible.plugins.action.reboot import (
+    ActionModule as RebootActionModule,
+    TimedOutException,
+)
 from ansible.utils.display import Display
 
 display = Display()
