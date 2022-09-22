@@ -75,6 +75,8 @@ class ActionModule(RebootActionModule):
     DEFAULT_LUKS_SSH_OPTIONS = [""]
     DEFAULT_LUKS_CONNECT_TIMEOUT = 600
 
+    _luks_ssh_private_key_tmp_file = None
+
     def try_get_connection_option(self, option):
         try:
             return self._connection.get_option(option)
@@ -93,6 +95,10 @@ class ActionModule(RebootActionModule):
         return self.try_get_connection_option('connection_timeout')
 
     @property
+    def luks_password(self):
+        return self.get_task_arg('luks_password')
+
+    @property
     def luks_ssh_user(self):
         return self.get_task_arg("luks_ssh_user") or self.DEFAULT_LUKS_SSH_USER
 
@@ -105,7 +111,13 @@ class ActionModule(RebootActionModule):
 
     @property
     def luks_ssh_private_key_file(self):
+        if self._luks_ssh_private_key_tmp_file:
+            return self._luks_ssh_private_key_tmp_file
         return self.get_task_arg('luks_ssh_private_key_file') or self.try_get_connection_option('ansible_ssh_private_key_file')
+
+    @property
+    def luks_ssh_private_key(self):
+        return self.get_task_arg('luks_ssh_private_key')
 
     @property
     def luks_ssh_executable(self):
@@ -187,7 +199,7 @@ class ActionModule(RebootActionModule):
             action=self._task.action, args=args))
         return args
 
-    def run_luks_ssh_prompt(self, distribution, luks_password):
+    def run_luks_ssh_prompt(self, distribution):
         # Must have this distribution param as parent do_until_success_or_timeout
         # passes it explicitly, even though we don't need it.
         _ = distribution
@@ -201,7 +213,7 @@ class ActionModule(RebootActionModule):
                 stdout=subprocess.PIPE,  # capture STDOUT
                 stderr=subprocess.STDOUT,  # redirect STDERR to STDOUT
                 text=True,  # string input & output instead of bytes
-                input=str(luks_password),
+                input=str(self.luks_password),
                 check=True)  # raise error on non-0 exit code
             display.display("{action}: LUKS SSH unlock successful, output:\n\t{output}".format(
                 action=self._task.action, output=result.stdout.replace("\n", "\n\t")))
@@ -217,7 +229,7 @@ class ActionModule(RebootActionModule):
                     action=self._task.action, output=e.output))
             raise
 
-    def unlock_luks(self, distribution, luks_password):
+    def unlock_luks(self, distribution):
         luks_ssh_timeout = self.luks_ssh_timeout
         result = {}
         display.vvv(
@@ -228,8 +240,7 @@ class ActionModule(RebootActionModule):
                 action=self.run_luks_ssh_prompt,
                 action_desc="post-reboot unlock LUKS full-disk encryption",
                 reboot_timeout=luks_ssh_timeout,
-                distribution=distribution,
-                action_kwargs={'luks_password': luks_password})
+                distribution=distribution)
         except TimedOutException as e:
             result['failed'] = True
             result['rebooted'] = True
@@ -242,7 +253,7 @@ class ActionModule(RebootActionModule):
         elapsed = datetime.utcnow() - start
         result['elapsed'] = elapsed.seconds
 
-    def run_reboot(self, distribution, previous_boot_time, luks_password, task_vars):
+    def run_reboot(self, distribution, previous_boot_time, task_vars):
         original_connection_timeout = self.connection_timeout
         reboot_result = self.perform_reboot(task_vars, distribution)
 
@@ -256,7 +267,7 @@ class ActionModule(RebootActionModule):
                 action=self._task.action, delay=post_reboot_delay))
             time.sleep(post_reboot_delay)
 
-        unlock_result = self.unlock_luks(distribution, luks_password)
+        unlock_result = self.unlock_luks(distribution)
         if unlock_result.get('failed'):
             self.set_result_elapsed(unlock_result, reboot_result['start'])
             return unlock_result
@@ -273,27 +284,37 @@ class ActionModule(RebootActionModule):
         result['unlocked'] = True
         return result
 
+    def validate_args(self):
+        if not self.luks_password:
+            raise AnsibleActionFail("luks_password is required")
+
     def setup_ssh_private_key_file(self):
-        # TODO: Check if key file is needed
-        # TODO: Use generated key file in luks_ssh_private_key_file
+        if self.luks_ssh_private_key_file:
+            # Skip if we already have file
+            return
+        if not self.luks_ssh_private_key:
+            raise AnsibleActionFail("luks_ssh_private_key_file or luks_ssh_private_key is required")
 
         (fd, path) = tempfile.mkstemp(prefix="reboot_luks_ssh_")
-        self._connection._shell.tmp_key_file = path
+        self._luks_ssh_private_key_tmp_file = path
 
-        # TODO: Write to generated key file
+        with open(fd, "w") as file:
+            file.write(self.luks_ssh_private_key)
 
         display.vvv("{action}: created temporary key file: {path}".format(
             action=self._task.action, path=path))
 
     def cleanup(self, force=False):
-        if self._connection._shell.tmp_key_file:
+        if self._luks_ssh_private_key_tmp_file:
             try:
-                os.remove(self._connection._shell.tmp_key_file)
+                os.remove(self._luks_ssh_private_key_tmp_file)
                 display.vvv("{action}: removed temporary key file: {path}".format(
-                    action=self._task.action, path=self._connection._shell.tmp_key_file))
+                    action=self._task.action, path=self._luks_ssh_private_key_tmp_file))
+                self._luks_ssh_private_key_tmp_file = None
             except Exception as e:
                 display.warning("{action}: failed to remove temporary key file: {path}: {e}".format(
-                    action=self._task.action, path=self._connection._shell.tmp_key_file, e=e))
+                    action=self._task.action, path=self._luks_ssh_private_key_tmp_file, e=e))
+
         super(ActionModule, self).cleanup(force=force)
 
     def run(self, tmp=None, task_vars=None):
@@ -313,16 +334,19 @@ class ActionModule(RebootActionModule):
 
         self.deprecated_args()
 
-        self.setup_ssh_private_key_file()
-        return {'skipped': True}
-
         result = super(RebootActionModule, self).run(tmp, task_vars)
         if result.get('skipped') or result.get('failed'):
             return result
 
-        luks_password = self._task.args.get('luks_password')
-        if luks_password is None:
-            raise AnsibleActionFail("luks_password is required")
+        try:
+            self.validate_args()
+            self.setup_ssh_private_key_file()
+        except AnsibleActionFail as e:
+            result['failed'] = True
+            result['reboot'] = False
+            result['unlocked'] = False
+            result['msg'] = to_text(e)
+            return result
 
         if task_vars == None:
             task_vars = {}
@@ -339,4 +363,4 @@ class ActionModule(RebootActionModule):
             return result
 
         return self.run_reboot(
-            distribution, previous_boot_time, luks_password, task_vars)
+            distribution, previous_boot_time, self.luks_password, task_vars)
