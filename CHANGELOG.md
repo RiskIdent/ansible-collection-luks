@@ -16,9 +16,12 @@ This project tries to follow [SemVer 2.0.0](https://semver.org/).
 	https://changelog.md/
 -->
 
-## v0.1.2 (WIP)
+## v0.2.0 (WIP)
 
 - Added support for "check mode". (#12)
+
+- Added field `luks_ssh_private_key` for supplying SSH private key as
+  raw string instead of using `luks_ssh_private_key_file`. (#13)
 
 ## v0.1.1 (2022-08-29)
 
