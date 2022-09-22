@@ -16,6 +16,10 @@ This project tries to follow [SemVer 2.0.0](https://semver.org/).
 	https://changelog.md/
 -->
 
+## v0.1.2 (WIP)
+
+- Added support for "check mode". (#12)
+
 ## v0.1.1 (2022-08-29)
 
 - Added `meta/runtime.yml` (#7)
