@@ -26,6 +26,8 @@
 from datetime import datetime
 import subprocess
 import time
+import tempfile
+import os
 
 from ansible.errors import AnsibleActionFail
 from ansible.module_utils._text import to_text
@@ -46,6 +48,7 @@ class ActionModule(RebootActionModule):
         'luks_ssh_port',
         'luks_ssh_user',
         'luks_ssh_private_key_file',
+        'luks_ssh_private_key',
         'luks_ssh_executable',
         'luks_ssh_connect_timeout',
         'luks_ssh_timeout',
@@ -267,6 +270,29 @@ class ActionModule(RebootActionModule):
         result['unlocked'] = True
         return result
 
+    def setup_ssh_private_key_file(self):
+        # TODO: Check if key file is needed
+        # TODO: Use generated key file in luks_ssh_private_key_file
+
+        (fd, path) = tempfile.mkstemp(prefix="reboot_luks_ssh_")
+        self._connection._shell.tmp_key_file = path
+
+        # TODO: Write to generated key file
+
+        display.vvv("{action}: created temporary key file: {path}".format(
+            action=self._task.action, path=path))
+
+    def cleanup(self, force=False):
+        if self._connection._shell.tmp_key_file:
+            try:
+                os.remove(self._connection._shell.tmp_key_file)
+                display.vvv("{action}: removed temporary key file: {path}".format(
+                    action=self._task.action, path=self._connection._shell.tmp_key_file))
+            except Exception as e:
+                display.warning("{action}: failed to remove temporary key file: {path}: {e}".format(
+                    action=self._task.action, path=self._connection._shell.tmp_key_file, e=e))
+        super(ActionModule, self).cleanup(force=force)
+
     def run(self, tmp=None, task_vars=None):
         self._supports_check_mode = True
         self._supports_async = True
@@ -283,6 +309,9 @@ class ActionModule(RebootActionModule):
             task_vars = {}
 
         self.deprecated_args()
+
+        self.setup_ssh_private_key_file()
+        return {'skipped': True}
 
         result = super(RebootActionModule, self).run(tmp, task_vars)
         if result.get('skipped') or result.get('failed'):
