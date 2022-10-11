@@ -23,6 +23,10 @@ This project tries to follow [SemVer 2.0.0](https://semver.org/).
 - Added field `luks_ssh_private_key` for supplying SSH private key as
   raw string instead of using `luks_ssh_private_key_file`. (#13)
 
+  This is implemented by adding the private key to your ssh-agent. It is by
+  default added with the `-t 3600` flag, so the key is automatically removed
+  from your ssh-agent after 1 hour.
+
 ## v0.1.1 (2022-08-29)
 
 - Added `meta/runtime.yml` (#7)
