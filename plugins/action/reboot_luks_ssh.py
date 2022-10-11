@@ -363,4 +363,4 @@ class ActionModule(RebootActionModule):
             return result
 
         return self.run_reboot(
-            distribution, previous_boot_time, self.luks_password, task_vars)
+            distribution, previous_boot_time, task_vars)
