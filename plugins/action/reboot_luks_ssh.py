@@ -24,9 +24,7 @@
 # taken at 2022-06-08.
 
 from datetime import datetime
-import os
 import subprocess
-import tempfile
 import time
 
 from ansible.errors import AnsibleActionFail
