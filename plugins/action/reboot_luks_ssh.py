@@ -57,6 +57,9 @@ class ActionModule(RebootActionModule):
         'luks_ssh_timeout',
         'luks_ssh_options',
         'post_unlock_delay',
+        'luks_ssh_keygen_executable',
+        'luks_ssh_add_executable',
+        'luks_ssh_add_timeout',
     ))
 
     # These delays actually speed up the process, as w/o them the script will:
@@ -74,8 +77,9 @@ class ActionModule(RebootActionModule):
     DEFAULT_LUKS_SSH_EXECUTABLE = "ssh"
     DEFAULT_LUKS_SSH_OPTIONS = [""]
     DEFAULT_LUKS_CONNECT_TIMEOUT = 600
-
-    _luks_ssh_private_key_tmp_file = None
+    DEFAULT_LUKS_SSH_KEYGEN_EXECUTABLE = "ssh-keygen"
+    DEFAULT_LUKS_SSH_ADD_EXECUTABLE = "ssh-add"
+    DEFAULT_LUKS_SSH_ADD_TIMEOUT = 3600
 
     def try_get_connection_option(self, option):
         try:
@@ -111,8 +115,6 @@ class ActionModule(RebootActionModule):
 
     @property
     def luks_ssh_private_key_file(self):
-        if self._luks_ssh_private_key_tmp_file:
-            return self._luks_ssh_private_key_tmp_file
         return self.get_task_arg('luks_ssh_private_key_file') or self.try_get_connection_option('ansible_ssh_private_key_file')
 
     @property
@@ -122,6 +124,18 @@ class ActionModule(RebootActionModule):
     @property
     def luks_ssh_executable(self):
         return self.get_task_arg("luks_ssh_executable") or self.try_get_connection_option("ansible_ssh_executable") or self.DEFAULT_LUKS_SSH_EXECUTABLE
+
+    @property
+    def luks_ssh_keygen_executable(self):
+        return self.get_task_arg("luks_ssh_keygen_executable") or self.DEFAULT_LUKS_SSH_KEYGEN_EXECUTABLE
+
+    @property
+    def luks_ssh_add_executable(self):
+        return self.get_task_arg("luks_ssh_add_executable") or self.DEFAULT_LUKS_SSH_ADD_EXECUTABLE
+
+    @property
+    def luks_ssh_add_timeout(self):
+        return self.get_task_arg("luks_ssh_add_timeout") or self.DEFAULT_LUKS_SSH_ADD_TIMEOUT
 
     @property
     def luks_ssh_connect_timeout(self):
@@ -179,10 +193,12 @@ class ActionModule(RebootActionModule):
             args.append('-o')
             args.append(opt)
 
-        private_key_file = self.luks_ssh_private_key_file
-        if private_key_file is not None:
-            args.append('-i')
-            args.append(private_key_file)
+        if not self.luks_ssh_private_key:
+            # Only add "-i" flag if we don't rely on ssh-agent
+            private_key_file = self.luks_ssh_private_key_file
+            if private_key_file is not None:
+                args.append('-i')
+                args.append(private_key_file)
 
         luks_ssh_user = self.luks_ssh_user
         if luks_ssh_user is not None:
@@ -295,27 +311,80 @@ class ActionModule(RebootActionModule):
         if not self.luks_ssh_private_key:
             raise AnsibleActionFail("luks_ssh_private_key_file or luks_ssh_private_key is required")
 
-        (fd, path) = tempfile.mkstemp(prefix="reboot_luks_ssh_")
-        self._luks_ssh_private_key_tmp_file = path
+        private_key = self.luks_ssh_private_key
+        public_key = self.private_key_to_public_key(private_key)
+        if self.is_public_key_added_to_ssh_agent(public_key):
+            # Skip as the key is already added
+            return
 
-        with open(fd, "w") as file:
-            file.write(self.luks_ssh_private_key)
+        self.add_private_key_to_ssh_agent(private_key)
 
-        display.vvv("{action}: created temporary key file: {path}".format(
-            action=self._task.action, path=path))
+    def private_key_to_public_key(self, private_key: str):
+        args = [
+            self.luks_ssh_keygen_executable,
+            "-y", # read private OpenSSH file, print OpenSSH public key
+            "-f", "/dev/stdin", # read from STDIN (not Windows compatible!)
+        ]
+        try:
+            display.vvv("{action}: Converting private key to public key via ssh-keygen".format(
+                action=self._task.action))
+            result = subprocess.run(
+                args,
+                stdout=subprocess.PIPE,  # capture STDOUT
+                stderr=subprocess.STDOUT,  # redirect STDERR to STDOUT
+                text=True,  # string input & output instead of bytes
+                input=str(private_key),
+                check=True)  # raise error on non-0 exit code
+            return result.stdout
+        except subprocess.CalledProcessError as e:
+            display.warning("{action}: Failed converting SSH private key to public key, output:\n{output}".format(
+                action=self._task.action, output=e.output))
+            raise
 
-    def cleanup(self, force=False):
-        if self._luks_ssh_private_key_tmp_file:
-            try:
-                os.remove(self._luks_ssh_private_key_tmp_file)
-                display.vvv("{action}: removed temporary key file: {path}".format(
-                    action=self._task.action, path=self._luks_ssh_private_key_tmp_file))
-                self._luks_ssh_private_key_tmp_file = None
-            except Exception as e:
-                display.warning("{action}: failed to remove temporary key file: {path}: {e}".format(
-                    action=self._task.action, path=self._luks_ssh_private_key_tmp_file, e=e))
+    def is_public_key_added_to_ssh_agent(self, public_key: str):
+        args = [
+            self.luks_ssh_add_executable,
+            "-T", # test if public key exists
+            "/dev/stdin", # read from STDIN (not Windows compatible!)
+        ]
+        try:
+            display.vvv("{action}: Checking if public key is added to ssh-agent via ssh-add".format(
+                action=self._task.action))
+            subprocess.run(
+                args,
+                stdout=subprocess.PIPE,  # capture STDOUT
+                stderr=subprocess.STDOUT,  # redirect STDERR to STDOUT
+                text=True,  # string input & output instead of bytes
+                input=str(public_key),
+                check=True)  # raise error on non-0 exit code
+            return True
+        except subprocess.CalledProcessError as e:
+            if e.returncode == 1:
+                return False
+            display.warning("{action}: Failed checking if SSH public key is added to ssh-agent, output:\n{output}".format(
+                action=self._task.action, output=e.output))
+            raise
 
-        super(ActionModule, self).cleanup(force=force)
+    def add_private_key_to_ssh_agent(self, private_key: str):
+        args = [
+            self.luks_ssh_add_executable,
+            "-t", str(self.luks_ssh_add_timeout),
+            "-", # read from STDIN
+        ]
+        try:
+            display.vvv("{action}: Adding private key to ssh-agent via ssh-add".format(
+                action=self._task.action))
+            subprocess.run(
+                args,
+                stdout=subprocess.PIPE,  # capture STDOUT
+                stderr=subprocess.STDOUT,  # redirect STDERR to STDOUT
+                text=True,  # string input & output instead of bytes
+                input=str(private_key),
+                check=True)  # raise error on non-0 exit code
+        except subprocess.CalledProcessError as e:
+            display.warning("{action}: Failed adding private key to ssh-agent via ssh-add, output:\n{output}".format(
+                action=self._task.action, output=e.output))
+            raise
 
     def run(self, tmp=None, task_vars=None):
         self._supports_check_mode = True
