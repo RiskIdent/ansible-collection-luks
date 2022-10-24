@@ -179,7 +179,3 @@ In addition, `reboot_luks_ssh` also defines some additional return values:
 | unlocked | boolean | `true` | always   | true if the disk encryption was unlocked.
 
 <!--lint enable maximum-line-length-->
-
-## Author Information
-
-Created for <https://jira.2rioffice.com/browse/OP-1174>
