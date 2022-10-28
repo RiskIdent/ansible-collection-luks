@@ -65,7 +65,8 @@ A role to install Dropbear into the initramfs can be found at
 [../../roles/initramfs\_dropbear](../../roles/initramfs_dropbear/README.md)
 
 When using `luks_ssh_private_key` (instead of `luks_ssh_private_key_file`),
-an ssh-agent must be running on the control-node (the machine that runs Ansible).
+an ssh-agent must be running on the control-node
+(the machine that runs Ansible).
 
 ### Installing Dropbear
 
