@@ -79,6 +79,8 @@ class ActionModule(RebootActionModule):
     DEFAULT_LUKS_SSH_ADD_EXECUTABLE = "ssh-add"
     DEFAULT_LUKS_SSH_ADD_TIMEOUT = 3600
 
+    _has_added_key_to_ssh_agent = False
+
     def try_get_connection_option(self, option):
         try:
             return self._connection.get_option(option)
@@ -306,16 +308,52 @@ class ActionModule(RebootActionModule):
         if self.luks_ssh_private_key_file:
             # Skip if we already have file
             return
-        if not self.luks_ssh_private_key:
+        private_key = self.luks_ssh_private_key
+        if not private_key:
             raise AnsibleActionFail("luks_ssh_private_key_file or luks_ssh_private_key is required")
 
-        private_key = self.luks_ssh_private_key
-        public_key = self.private_key_to_public_key(private_key)
-        if self.is_public_key_added_to_ssh_agent(public_key):
-            # Skip as the key is already added
-            return
-
         self.add_private_key_to_ssh_agent(private_key)
+        self._has_added_key_to_ssh_agent = True
+
+    def add_private_key_to_ssh_agent(self, private_key: str):
+        args = [
+            self.luks_ssh_add_executable,
+            "-t", str(self.luks_ssh_add_timeout),
+            "-", # read from STDIN
+        ]
+        try:
+            display.vvv("{action}: Adding private key to ssh-agent via ssh-add".format(
+                action=self._task.action))
+            subprocess.run(
+                args,
+                stdout=subprocess.PIPE,  # capture STDOUT
+                stderr=subprocess.STDOUT,  # redirect STDERR to STDOUT
+                text=True,  # string input & output instead of bytes
+                input=str(private_key),
+                check=True)  # raise error on non-0 exit code
+        except subprocess.CalledProcessError as e:
+            raise RuntimeError("Failed adding private key to ssh-agent via ssh-add, output:\n{output}".format(
+                output=e.output)) from e
+
+    def remove_public_key_from_ssh_agent(self, public_key: str):
+        args = [
+            self.luks_ssh_add_executable,
+            "-d",
+            "-", # read from STDIN
+        ]
+        try:
+            display.vvv("{action}: Removing private key from ssh-agent via ssh-add".format(
+                action=self._task.action))
+            subprocess.run(
+                args,
+                stdout=subprocess.PIPE,  # capture STDOUT
+                stderr=subprocess.STDOUT,  # redirect STDERR to STDOUT
+                text=True,  # string input & output instead of bytes
+                input=str(public_key),
+                check=True)  # raise error on non-0 exit code
+        except subprocess.CalledProcessError as e:
+            raise RuntimeError("Failed removing private key from ssh-agent via ssh-add, output:\n{output}".format(
+                output=e.output)) from e
 
     def private_key_to_public_key(self, private_key: str):
         args = [
@@ -335,54 +373,20 @@ class ActionModule(RebootActionModule):
                 check=True)  # raise error on non-0 exit code
             return result.stdout
         except subprocess.CalledProcessError as e:
-            display.warning("{action}: Failed converting SSH private key to public key, output:\n{output}".format(
-                action=self._task.action, output=e.output))
-            raise
+            raise RuntimeError("Failed converting SSH private key to public key, output:\n{output}".format(
+                output=e.output)) from e
 
-    def is_public_key_added_to_ssh_agent(self, public_key: str):
-        args = [
-            self.luks_ssh_add_executable,
-            "-T", # test if public key exists
-            "/dev/stdin", # read from STDIN (not Windows compatible!)
-        ]
-        try:
-            display.vvv("{action}: Checking if public key is added to ssh-agent via ssh-add".format(
-                action=self._task.action))
-            subprocess.run(
-                args,
-                stdout=subprocess.PIPE,  # capture STDOUT
-                stderr=subprocess.STDOUT,  # redirect STDERR to STDOUT
-                text=True,  # string input & output instead of bytes
-                input=str(public_key),
-                check=True)  # raise error on non-0 exit code
-            return True
-        except subprocess.CalledProcessError as e:
-            if e.returncode == 1:
-                return False
-            display.warning("{action}: Failed checking if SSH public key is added to ssh-agent, output:\n{output}".format(
-                action=self._task.action, output=e.output))
-            raise
+    def cleanup(self, force=False):
+        if self._has_added_key_to_ssh_agent:
+            try:
+                public_key = self.private_key_to_public_key(str(self.luks_ssh_private_key))
+                self.remove_public_key_from_ssh_agent(public_key)
+                self._has_added_key_to_ssh_agent = False
+            except Exception as e:
+                display.warning("{action}: Failed cleaning up SSH key from SSH-agent, error:\n{error}".format(
+                    action=self._task.action, error=e))
 
-    def add_private_key_to_ssh_agent(self, private_key: str):
-        args = [
-            self.luks_ssh_add_executable,
-            "-t", str(self.luks_ssh_add_timeout),
-            "-", # read from STDIN
-        ]
-        try:
-            display.vvv("{action}: Adding private key to ssh-agent via ssh-add".format(
-                action=self._task.action))
-            subprocess.run(
-                args,
-                stdout=subprocess.PIPE,  # capture STDOUT
-                stderr=subprocess.STDOUT,  # redirect STDERR to STDOUT
-                text=True,  # string input & output instead of bytes
-                input=str(private_key),
-                check=True)  # raise error on non-0 exit code
-        except subprocess.CalledProcessError as e:
-            display.warning("{action}: Failed adding private key to ssh-agent via ssh-add, output:\n{output}".format(
-                action=self._task.action, output=e.output))
-            raise
+        super(ActionModule, self).cleanup(force=force)
 
     def run(self, tmp=None, task_vars=None):
         self._supports_check_mode = True
