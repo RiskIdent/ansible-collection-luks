@@ -16,7 +16,7 @@ This project tries to follow [SemVer 2.0.0](https://semver.org/).
 	https://changelog.md/
 -->
 
-## v0.2.0 (WIP)
+## v0.2.0 (2022-11-02)
 
 - Added support for "check mode". (#12)
 
