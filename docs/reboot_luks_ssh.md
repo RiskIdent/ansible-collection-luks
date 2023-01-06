@@ -131,17 +131,22 @@ In addition, `reboot_luks_ssh` also defines some additional parameters:
 
 <!--lint disable maximum-line-length-->
 
-| Parameter                   | Type   | Default | Comments |
-| -------------------------   | ------ | ------- | -------- |
-| `luks_ssh_port`             | int    | `1024` | SSH port of target machine when in LUKS boot (Dropbear)
-| `luks_ssh_user`             | string | `"root"` | SSH username used when connecting to LUKS boot (Dropbear)
-| `luks_ssh_private_key_file` | string | `ansible_ssh_private_key_file` (inventory param) | Path of SSH private key file, e.g `/home/ubuntu/.ssh/id_rsa`
-| `luks_ssh_private_key`      | string | `""` | Raw SSH private key text, e.g the content of your `~/.ssh/id_rsa` file
-| `luks_ssh_executable`       | string | `ansible_ssh_executable` (inventory param), or `"ssh"` | Command name of SSH executable used when connecting to LUKS boot (Dropbear)
-| `luks_ssh_connect_timeout`  | int    | `connect_timeout` (`ansible.builtin.reboot` param), or `600` | Connection timeout (in seconds) used when connecting to LUKS boot (Dropbear)
-| `luks_ssh_timeout`          | int    | `reboot_timeout` (`ansible.builtin.reboot` param) | Connection timeout (in seconds) for all connection retries in total, including the wait time between the retries.
-| `luks_ssh_options`          | list\[string] | `[]` | Additional arbitrary SSH options used when connecting to LUKS boot (Dropbear), such as `PubkeyAcceptedKeyTypes`
-| `post_unlock_delay`         | int    | `0` | Time to wait (in seconds) after a successful LUKS unlock.
+| Parameter                    | Type   | Default | Comments |
+| ---------------------------- | ------ | ------- | -------- |
+| `luks_ssh_port`              | int    | `1024` | SSH port of target machine when in LUKS boot (Dropbear)
+| `luks_ssh_user`              | string | `"root"` | SSH username used when connecting to LUKS boot (Dropbear)
+| `luks_ssh_private_key_file`  | string | `ansible_ssh_private_key_file` (inventory param) | Path of SSH private key file, e.g `/home/ubuntu/.ssh/id_rsa`
+| `luks_ssh_private_key`       | string | `""` | Raw SSH private key text, e.g the content of your `~/.ssh/id_rsa` file
+| `luks_ssh_executable`        | string | `ansible_ssh_executable` (inventory param), or `"ssh"` | Command name of SSH executable used when connecting to LUKS boot (Dropbear)
+| `luks_ssh_connect_timeout`   | int    | `connect_timeout` (`ansible.builtin.reboot` param), or `600` | Connection timeout (in seconds) used when connecting to LUKS boot (Dropbear)
+| `luks_ssh_timeout`           | int    | `reboot_timeout` (`ansible.builtin.reboot` param) | Connection timeout (in seconds) for all connection retries in total, including the wait time between the retries.
+| `luks_ssh_options`           | list\[string] | `[]` | Additional arbitrary SSH options used when connecting to LUKS boot (Dropbear), such as `PubkeyAcceptedKeyTypes`
+| `post_unlock_delay`          | int    | `0` | Time to wait (in seconds) after a successful LUKS unlock.
+| `luks_ssh_keygen_executable` | string | `"ssh-keygen"` | The `ssh-keygen` executable to use when converting `luks_ssh_private_key` to a public key.
+| `luks_ssh_add_executable`    | string | `"ssh-add"` | The `ssh-add` executable to use when adding the `luks_ssh_private_key` to your SSH agent.
+| `luks_ssh_add_timeout`       | int    | `3600` | The `luks_ssh_private_key` key is automatically removed by the SSH agent after this many seconds, in case the `reboot_luks_ssh` action plugin fails to remove it by itself.
+| `luks_stop_retry_on_output`  | list\[string] | `["bad password", "maximum number of tries exceeded", "error", "timeout"]` | If the cryptroot-unlock's output contains any of these substrings (case insensitive) then stop retrying to unlock and fail early.
+| `luks_ssh_reconnect_timeout`  | int   | `3600` | Timeout for reconnecting after failing to unlock, waiting for manual unlock by human.
 
 <!--lint enable maximum-line-length-->
 

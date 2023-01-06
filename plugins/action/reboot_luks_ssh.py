@@ -23,19 +23,29 @@
 # https://github.com/ansible/ansible/blob/v2.12.6/lib/ansible/plugins/action/reboot.py
 # taken at 2022-06-08.
 
-from datetime import datetime
+from datetime import datetime, timedelta
+from random import random
 import subprocess
 import time
 
 from ansible.errors import AnsibleActionFail
+from ansible.errors import AnsibleConnectionFailure
+from ansible.module_utils._text import to_text
 from ansible.module_utils._text import to_text
 from ansible.plugins.action.reboot import (
     ActionModule as RebootActionModule,
     TimedOutException,
 )
 from ansible.utils.display import Display
+from ansible.utils.display import Display
 
 display = Display()
+
+
+class StopRetryLoop(Exception):
+    def __init__(self, exception: Exception):
+        self.exception = exception
+        super().__init__("StopRetryLoop: %s" % exception)
 
 
 class ActionModule(RebootActionModule):
@@ -58,6 +68,7 @@ class ActionModule(RebootActionModule):
         'luks_ssh_keygen_executable',
         'luks_ssh_add_executable',
         'luks_ssh_add_timeout',
+        'luks_stop_retry_on_output',
     ))
 
     # These delays actually speed up the process, as w/o them the script will:
@@ -78,92 +89,95 @@ class ActionModule(RebootActionModule):
     DEFAULT_LUKS_SSH_KEYGEN_EXECUTABLE = "ssh-keygen"
     DEFAULT_LUKS_SSH_ADD_EXECUTABLE = "ssh-add"
     DEFAULT_LUKS_SSH_ADD_TIMEOUT = 3600
+    DEFAULT_LUKS_STOP_RETRY_ON_OUTPUT = [
+        "bad password",
+        "maximum number of tries exceeded",
+        "error",
+        "timeout",
+    ]
+    DEFAULT_LUKS_SSH_RECONNECT_TIMEOUT = 3600
 
     _has_added_key_to_ssh_agent = False
 
-    def try_get_connection_option(self, option):
+    def _try_get_connection_option(self, option):
         try:
             return self._connection.get_option(option)
         except KeyError:
             return None
 
-    def get_task_arg(self, *names):
+    def _get_task_arg(self, *names: str):
         for name in names:
             value = self._task.args.get(name)
             if value is not None:
                 return value
         return None
 
+    def _get_task_arg_int(self, *names: str):
+        for name in names:
+            value = self._task.args.get(name)
+            if value is not None:
+                try:
+                    return int(value)
+                except ValueError as e:
+                    raise AnsibleActionFail(
+                        "parse %s" % name, orig_exc=e)
+        return None
+
     @property
     def connection_timeout(self):
-        return self.try_get_connection_option('connection_timeout')
+        return self._try_get_connection_option('connection_timeout')
 
     @property
     def luks_password(self):
-        return self.get_task_arg('luks_password')
+        return self._get_task_arg('luks_password')
 
     @property
     def luks_ssh_user(self):
-        return self.get_task_arg("luks_ssh_user") or self.DEFAULT_LUKS_SSH_USER
+        return self._get_task_arg("luks_ssh_user") or self.DEFAULT_LUKS_SSH_USER
 
     @property
     def luks_ssh_port(self):
-        try:
-            return int(self._task.args.get('luks_ssh_port', self.DEFAULT_LUKS_SSH_PORT))
-        except ValueError as e:
-            raise AnsibleActionFail("parse luks_ssh_port", orig_exc=e)
+        return self._get_task_arg_int('luks_ssh_port') or self.DEFAULT_LUKS_SSH_PORT
 
     @property
     def luks_ssh_private_key_file(self):
-        return self.get_task_arg('luks_ssh_private_key_file') or self.try_get_connection_option('ansible_ssh_private_key_file')
+        return self._get_task_arg('luks_ssh_private_key_file') or self._try_get_connection_option('ansible_ssh_private_key_file')
 
     @property
     def luks_ssh_private_key(self):
-        return self.get_task_arg('luks_ssh_private_key')
+        return self._get_task_arg('luks_ssh_private_key')
 
     @property
     def luks_ssh_executable(self):
-        return self.get_task_arg("luks_ssh_executable") or self.try_get_connection_option("ansible_ssh_executable") or self.DEFAULT_LUKS_SSH_EXECUTABLE
+        return self._get_task_arg("luks_ssh_executable") or self._try_get_connection_option("ansible_ssh_executable") or self.DEFAULT_LUKS_SSH_EXECUTABLE
 
     @property
     def luks_ssh_keygen_executable(self):
-        return self.get_task_arg("luks_ssh_keygen_executable") or self.DEFAULT_LUKS_SSH_KEYGEN_EXECUTABLE
+        return self._get_task_arg("luks_ssh_keygen_executable") or self.DEFAULT_LUKS_SSH_KEYGEN_EXECUTABLE
 
     @property
     def luks_ssh_add_executable(self):
-        return self.get_task_arg("luks_ssh_add_executable") or self.DEFAULT_LUKS_SSH_ADD_EXECUTABLE
+        return self._get_task_arg("luks_ssh_add_executable") or self.DEFAULT_LUKS_SSH_ADD_EXECUTABLE
 
     @property
     def luks_ssh_add_timeout(self):
-        return self.get_task_arg("luks_ssh_add_timeout") or self.DEFAULT_LUKS_SSH_ADD_TIMEOUT
+        return self._get_task_arg_int("luks_ssh_add_timeout") or self.DEFAULT_LUKS_SSH_ADD_TIMEOUT
 
     @property
     def luks_ssh_connect_timeout(self):
-        luks_ssh_connect_timeout = self.get_task_arg(
-            "luks_ssh_connect_timeout", "connect_timeout", "connect_timeout_sec")
-        if luks_ssh_connect_timeout:
-            try:
-                return int(luks_ssh_connect_timeout)
-            except ValueError as e:
-                raise AnsibleActionFail(
-                    "parse luks_ssh_connect_timeout", orig_exc=e)
-        return None
+        return self._get_task_arg_int("luks_ssh_connect_timeout", "connect_timeout", "connect_timeout_sec")
 
     @property
     def luks_ssh_timeout(self):
-        luks_ssh_timeout = self.get_task_arg(
-            "luks_ssh_timeout", "reboot_timeout", "reboot_timeout_sec") or self.DEFAULT_REBOOT_TIMEOUT
-        if luks_ssh_timeout:
-            try:
-                return int(luks_ssh_timeout)
-            except ValueError as e:
-                raise AnsibleActionFail(
-                    "parse luks_ssh_timeout", orig_exc=e)
-        return None
+        return self._get_task_arg_int("luks_ssh_timeout", "reboot_timeout", "reboot_timeout_sec") or self.DEFAULT_REBOOT_TIMEOUT
+
+    @property
+    def luks_ssh_reconnect_timeout(self):
+        return self._get_task_arg_int("luks_ssh_reconnect_timeout") or self.DEFAULT_LUKS_SSH_RECONNECT_TIMEOUT
 
     @property
     def luks_ssh_options(self):
-        luks_ssh_options = self.get_task_arg("luks_ssh_options")
+        luks_ssh_options = self._get_task_arg("luks_ssh_options")
         if not luks_ssh_options:
             return []
         if isinstance(luks_ssh_options, str):
@@ -180,7 +194,11 @@ class ActionModule(RebootActionModule):
 
     @property
     def post_unlock_delay(self):
-        return self.get_task_arg("post_unlock_delay") or self.DEFAULT_POST_UNLOCK_DELAY
+        return self._get_task_arg("post_unlock_delay") or self.DEFAULT_POST_UNLOCK_DELAY
+
+    @property
+    def luks_stop_retry_on_output(self):
+        return self._get_task_arg("luks_stop_retry_on_output") or self.DEFAULT_LUKS_STOP_RETRY_ON_OUTPUT
 
     def get_luks_ssh_args(self):
         args = [
@@ -215,11 +233,7 @@ class ActionModule(RebootActionModule):
             action=self._task.action, args=args))
         return args
 
-    def run_luks_ssh_prompt(self, distribution):
-        # Must have this distribution param as parent do_until_success_or_timeout
-        # passes it explicitly, even though we don't need it.
-        _ = distribution
-
+    def run_luks_ssh_prompt(self):
         args = self.get_luks_ssh_args()
         try:
             display.vvv("{action}: Attempting LUKS SSH unlock via SSH exec".format(
@@ -234,36 +248,63 @@ class ActionModule(RebootActionModule):
             display.display("{action}: LUKS SSH unlock successful, output:\n\t{output}".format(
                 action=self._task.action, output=result.stdout.replace("\n", "\n\t")))
         except subprocess.CalledProcessError as e:
+            output = str(e.output)
             if e.returncode == 255:
                 # SSH connection error; the machine is probably still booting.
                 # Could also be any other SSH client errors, but we cannot
                 # know that.
                 display.warning("{action}: LUKS SSH connection fail (non-fatal, will attempt multiple times), output:\n\t{output}".format(
-                    action=self._task.action, output=e.output.replace("\n", "\n\t")))
+                    action=self._task.action, output=output.replace("\n", "\n\t")))
             else:
-                display.warning("{action}: LUKS unlock disk-encryption via SSH prompt failed, output:\n{output}".format(
-                    action=self._task.action, output=e.output))
+                for substr in self.luks_stop_retry_on_output:
+                    if substr.casefold() in output.casefold():
+                        display.vvv("{action}: LUKS unlock disk-encryption via SSH prompt failed, known stop keywords founds, output:\n\t{output}".format(
+                            action=self._task.action, output=output))
+                        raise StopRetryLoop(e)
+
+                display.warning("{action}: LUKS unlock disk-encryption via SSH prompt failed, output:\n\t{output}".format(
+                    action=self._task.action, output=output))
             raise
 
-    def unlock_luks(self, distribution):
-        luks_ssh_timeout = self.luks_ssh_timeout
-        result = {}
+    def unlock_luks(self, distribution, previous_boot_time, task_vars):
         display.vvv(
             "{action}: post-reboot: starting LUKS unlock retry loop".format(action=self._task.action))
 
         try:
-            self.do_until_success_or_timeout(
+            self.ri_do_until_success_or_timeout(
                 action=self.run_luks_ssh_prompt,
                 action_desc="post-reboot unlock LUKS full-disk encryption",
-                reboot_timeout=luks_ssh_timeout,
-                distribution=distribution)
-        except TimedOutException as e:
-            result['failed'] = True
-            result['rebooted'] = True
-            result['unlocked'] = False
-            result['msg'] = to_text(e)
+                reboot_timeout=self.luks_ssh_timeout)
+            return {}
 
-        return result
+        except Exception as unlock_error:
+            timeout = self.luks_ssh_reconnect_timeout
+            hostname = self._get_remote_addr(task_vars)
+            display.warning("{action}: LUKS unlock failed. Please unlock the host manually: {ansible_host} (timeout: {timeout} seconds)".format(
+                action=self._task.action, ansible_host=hostname, timeout=timeout))
+
+            try:
+                self.do_until_success_or_timeout(
+                    action=self.check_boot_time,
+                    action_desc="post-reboot reconnect",
+                    reboot_timeout=timeout,
+                    distribution=distribution,
+                    action_kwargs={'previous_boot_time': previous_boot_time})
+                return {}
+
+            except Exception:
+                display.error("{action}: Timed out waiting for you to unlock host manually: {ansible_host} (timeout: {timeout} seconds)".format(
+                    action=self._task.action, ansible_host=hostname, timeout=timeout))
+
+                return {
+                    'failed': True,
+                    'rebooted': True,
+                    'unlocked': False,
+                    'msg': to_text(unlock_error),
+                }
+
+    def run_reconnect(self):
+        self._connection.reset()
 
     def set_result_elapsed(self, result: dict, start: datetime):
         elapsed = datetime.utcnow() - start
@@ -283,7 +324,7 @@ class ActionModule(RebootActionModule):
                 action=self._task.action, delay=post_reboot_delay))
             time.sleep(post_reboot_delay)
 
-        unlock_result = self.unlock_luks(distribution)
+        unlock_result = self.unlock_luks(distribution, previous_boot_time, task_vars)
         if unlock_result.get('failed'):
             self.set_result_elapsed(unlock_result, reboot_result['start'])
             return unlock_result
@@ -310,7 +351,8 @@ class ActionModule(RebootActionModule):
             return
         private_key = self.luks_ssh_private_key
         if not private_key:
-            raise AnsibleActionFail("luks_ssh_private_key_file or luks_ssh_private_key is required")
+            raise AnsibleActionFail(
+                "luks_ssh_private_key_file or luks_ssh_private_key is required")
 
         self.add_private_key_to_ssh_agent(private_key)
         self._has_added_key_to_ssh_agent = True
@@ -319,7 +361,7 @@ class ActionModule(RebootActionModule):
         args = [
             self.luks_ssh_add_executable,
             "-t", str(self.luks_ssh_add_timeout),
-            "-", # read from STDIN
+            "-",  # read from STDIN
         ]
         try:
             display.vvv("{action}: Adding private key to ssh-agent via ssh-add".format(
@@ -339,7 +381,7 @@ class ActionModule(RebootActionModule):
         args = [
             self.luks_ssh_add_executable,
             "-d",
-            "-", # read from STDIN
+            "-",  # read from STDIN
         ]
         try:
             display.vvv("{action}: Removing private key from ssh-agent via ssh-add".format(
@@ -358,8 +400,8 @@ class ActionModule(RebootActionModule):
     def private_key_to_public_key(self, private_key: str):
         args = [
             self.luks_ssh_keygen_executable,
-            "-y", # read private OpenSSH file, print OpenSSH public key
-            "-f", "/dev/stdin", # read from STDIN (not Windows compatible!)
+            "-y",  # read private OpenSSH file, print OpenSSH public key
+            "-f", "/dev/stdin",  # read from STDIN (not Windows compatible!)
         ]
         try:
             display.vvv("{action}: Converting private key to public key via ssh-keygen".format(
@@ -376,10 +418,58 @@ class ActionModule(RebootActionModule):
             raise RuntimeError("Failed converting SSH private key to public key, output:\n{output}".format(
                 output=e.output)) from e
 
+    def ri_do_until_success_or_timeout(self, action, reboot_timeout, action_desc, action_kwargs=None):
+        # RiskIdent: This function is taken directly from the ansible.builtin.reboot code
+        max_end_time = datetime.utcnow() + timedelta(seconds=reboot_timeout)
+        if action_kwargs is None:
+            action_kwargs = {}
+
+        fail_count = 0
+        max_fail_sleep = 12
+
+        while datetime.utcnow() < max_end_time:
+            try:
+                action(**action_kwargs)
+                if action_desc:
+                    display.debug('{action}: {desc} success'.format(
+                        action=self._task.action, desc=action_desc))
+                return
+            except StopRetryLoop as e:
+                # RiskIdent: This additional "except" statement is all that's added
+                raise e.exception
+            except Exception as e:
+                if isinstance(e, AnsibleConnectionFailure):
+                    try:
+                        self._connection.reset()
+                    except AnsibleConnectionFailure:
+                        pass
+                # Use exponential backoff with a max timout, plus a little bit of randomness
+                random_int = random.randint(0, 1000) / 1000
+                fail_sleep = 2 ** fail_count + random_int
+                if fail_sleep > max_fail_sleep:
+
+                    fail_sleep = max_fail_sleep + random_int
+                if action_desc:
+                    try:
+                        error = to_text(e).splitlines()[-1]
+                    except IndexError as e:
+                        error = to_text(e)
+                    display.debug("{action}: {desc} fail '{err}', retrying in {sleep:.4} seconds...".format(
+                        action=self._task.action,
+                        desc=action_desc,
+                        err=error,
+                        sleep=fail_sleep))
+                fail_count += 1
+                time.sleep(fail_sleep)
+
+        raise TimedOutException('Timed out waiting for {desc} (timeout={timeout})'.format(
+            desc=action_desc, timeout=reboot_timeout))
+
     def cleanup(self, force=False):
         if self._has_added_key_to_ssh_agent:
             try:
-                public_key = self.private_key_to_public_key(str(self.luks_ssh_private_key))
+                public_key = self.private_key_to_public_key(
+                    str(self.luks_ssh_private_key))
                 self.remove_public_key_from_ssh_agent(public_key)
                 self._has_added_key_to_ssh_agent = False
             except Exception as e:
@@ -394,7 +484,8 @@ class ActionModule(RebootActionModule):
 
         # If running with local connection, fail so we don't reboot ourself
         if self._connection.transport == 'local':
-            msg = 'Running {0} with local connection would reboot the control node.'.format(self._task.action)
+            msg = 'Running {0} with local connection would reboot the control node.'.format(
+                self._task.action)
             return {'changed': False, 'elapsed': 0, 'rebooted': False, 'failed': True, 'unlocked': False, 'msg': msg}
 
         if self._play_context.check_mode:
