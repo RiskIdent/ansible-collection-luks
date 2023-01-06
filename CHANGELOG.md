@@ -16,6 +16,22 @@ This project tries to follow [SemVer 2.0.0](https://semver.org/).
 	https://changelog.md/
 -->
 
+## v0.3.0 (WIP)
+
+- Added "manual unlock" feature, where you have to manually unlock the machine
+  if the `reboot_luks_ssh` action plugin succeeds in rebooting,
+  but fails to unlock it. (#15)
+
+- Added settings for cryptsetup-unlock output to consider failed unlock,
+  and will fail early instead of keep retrying an incorrect password. (#15)
+
+- Added args: (#15)
+
+  - `luks_stop_retry_on_output`
+  - `no_manual_unlock_on_fail`
+
+- Added missing documentation on args added in #13. (#15)
+
 ## v0.2.0 (2022-11-02)
 
 - Added support for "check mode". (#12)
