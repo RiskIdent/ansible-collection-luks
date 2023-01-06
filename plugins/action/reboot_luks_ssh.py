@@ -38,6 +38,7 @@ from ansible.plugins.action.reboot import (
 )
 from ansible.utils.display import Display
 from ansible.utils.display import Display
+from ansible.module_utils.parsing.convert_bool import boolean
 
 display = Display()
 
@@ -69,6 +70,7 @@ class ActionModule(RebootActionModule):
         'luks_ssh_add_executable',
         'luks_ssh_add_timeout',
         'luks_stop_retry_on_output',
+        'no_manual_unlock_on_fail',
     ))
 
     # These delays actually speed up the process, as w/o them the script will:
@@ -200,6 +202,10 @@ class ActionModule(RebootActionModule):
     def luks_stop_retry_on_output(self):
         return self._get_task_arg("luks_stop_retry_on_output") or self.DEFAULT_LUKS_STOP_RETRY_ON_OUTPUT
 
+    @property
+    def no_manual_unlock_on_fail(self):
+        return boolean(self._get_task_arg('no_manual_unlock_on_fail'))
+
     def get_luks_ssh_args(self):
         args = [
             self.luks_ssh_executable,
@@ -278,6 +284,17 @@ class ActionModule(RebootActionModule):
             return {}
 
         except Exception as unlock_error:
+            fail_result = {
+                'failed': True,
+                'rebooted': True,
+                'unlocked': False,
+                'msg': to_text(unlock_error),
+            }
+            if self.no_manual_unlock_on_fail:
+                display.vvv("{action}: LUKS unlock failed. Not asking for manual unlock because no_manual_unlock_on_fail was true".format(
+                    action=self._task.action))
+                return fail_result
+
             timeout = self.luks_ssh_reconnect_timeout
             hostname = self._get_remote_addr(task_vars)
             display.warning("{action}: LUKS unlock failed. Please unlock the host manually: {ansible_host} (timeout: {timeout} seconds)".format(
@@ -296,12 +313,7 @@ class ActionModule(RebootActionModule):
                 display.error("{action}: Timed out waiting for you to unlock host manually: {ansible_host} (timeout: {timeout} seconds)".format(
                     action=self._task.action, ansible_host=hostname, timeout=timeout))
 
-                return {
-                    'failed': True,
-                    'rebooted': True,
-                    'unlocked': False,
-                    'msg': to_text(unlock_error),
-                }
+                return fail_result
 
     def run_reconnect(self):
         self._connection.reset()
