@@ -32,13 +32,13 @@ from ansible.errors import AnsibleActionFail
 from ansible.errors import AnsibleConnectionFailure
 from ansible.module_utils._text import to_text
 from ansible.module_utils._text import to_text
+from ansible.module_utils.parsing.convert_bool import boolean
 from ansible.plugins.action.reboot import (
     ActionModule as RebootActionModule,
     TimedOutException,
 )
 from ansible.utils.display import Display
 from ansible.utils.display import Display
-from ansible.module_utils.parsing.convert_bool import boolean
 
 display = Display()
 
@@ -336,7 +336,8 @@ class ActionModule(RebootActionModule):
                 action=self._task.action, delay=post_reboot_delay))
             time.sleep(post_reboot_delay)
 
-        unlock_result = self.unlock_luks(distribution, previous_boot_time, task_vars)
+        unlock_result = self.unlock_luks(
+            distribution, previous_boot_time, task_vars)
         if unlock_result.get('failed'):
             self.set_result_elapsed(unlock_result, reboot_result['start'])
             return unlock_result
