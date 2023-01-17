@@ -28,7 +28,7 @@ This project tries to follow [SemVer 2.0.0](https://semver.org/).
 - Added args: (#15)
 
   - `luks_stop_retry_on_output`
-  - `no_manual_unlock_on_fail`
+  - `luks_manual_unlock_on_fail`
 
 - Added missing documentation on args added in #13. (#15)
 

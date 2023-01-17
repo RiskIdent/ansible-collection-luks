@@ -70,7 +70,7 @@ class ActionModule(RebootActionModule):
         'luks_ssh_add_executable',
         'luks_ssh_add_timeout',
         'luks_stop_retry_on_output',
-        'no_manual_unlock_on_fail',
+        'luks_manual_unlock_on_fail',
     ))
 
     # These delays actually speed up the process, as w/o them the script will:
@@ -98,6 +98,7 @@ class ActionModule(RebootActionModule):
         "timeout",
     ]
     DEFAULT_LUKS_SSH_RECONNECT_TIMEOUT = 3600
+    DEFAULT_LUKS_MANUAL_UNLOCK_ON_FAIL = True
 
     _has_added_key_to_ssh_agent = False
 
@@ -203,8 +204,12 @@ class ActionModule(RebootActionModule):
         return self._get_task_arg("luks_stop_retry_on_output") or self.DEFAULT_LUKS_STOP_RETRY_ON_OUTPUT
 
     @property
-    def no_manual_unlock_on_fail(self):
-        return boolean(self._get_task_arg('no_manual_unlock_on_fail'))
+    def luks_manual_unlock_on_fail(self):
+        # Cannot use "or" here to see if it's unset, as the data type is bool
+        value = self._task.args.get('luks_manual_unlock_on_fail')
+        if value is None:
+            return self.DEFAULT_LUKS_MANUAL_UNLOCK_ON_FAIL
+        return boolean(value)
 
     def get_luks_ssh_args(self):
         args = [
@@ -290,8 +295,8 @@ class ActionModule(RebootActionModule):
                 'unlocked': False,
                 'msg': to_text(unlock_error),
             }
-            if self.no_manual_unlock_on_fail:
-                display.vvv("{action}: LUKS unlock failed. Not asking for manual unlock because no_manual_unlock_on_fail was true".format(
+            if not self.luks_manual_unlock_on_fail:
+                display.vvv("{action}: LUKS unlock failed. Not asking for manual unlock because luks_manual_unlock_on_fail was false".format(
                     action=self._task.action))
                 return fail_result
 
@@ -433,6 +438,8 @@ class ActionModule(RebootActionModule):
 
     def ri_do_until_success_or_timeout(self, action, reboot_timeout, action_desc, action_kwargs=None):
         # RiskIdent: This function is taken directly from the ansible.builtin.reboot code
+        # Changed sections are marked with a "# RiskIdent:" line comment
+
         max_end_time = datetime.utcnow() + timedelta(seconds=reboot_timeout)
         if action_kwargs is None:
             action_kwargs = {}

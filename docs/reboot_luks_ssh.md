@@ -147,7 +147,7 @@ In addition, `reboot_luks_ssh` also defines some additional parameters:
 | `luks_ssh_add_timeout`       | int    | `3600` | The `luks_ssh_private_key` key is automatically removed by the SSH agent after this many seconds, in case the `reboot_luks_ssh` action plugin fails to remove it by itself.
 | `luks_stop_retry_on_output`  | list\[string] | `["bad password", "maximum number of tries exceeded", "error", "timeout"]` | If the cryptroot-unlock's output contains any of these substrings (case insensitive) then stop retrying to unlock and fail early.
 | `luks_ssh_reconnect_timeout` | int    | `3600` | Timeout for reconnecting after failing to unlock, waiting for manual unlock by human.
-| `no_manual_unlock_on_fail`   | bool   | `false` | Disables feature of letting human manually unlock LUKS if the action plugin fails, and will instead fail the task.
+| `luks_manual_unlock_on_fail` | bool   | `true` | If true, the action plugin will prompt the human to manually unlock LUKS if the action plugin fails, instead of failing the task.
 
 <!--lint enable maximum-line-length-->
 
