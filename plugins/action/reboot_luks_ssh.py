@@ -31,13 +31,11 @@ import time
 from ansible.errors import AnsibleActionFail
 from ansible.errors import AnsibleConnectionFailure
 from ansible.module_utils._text import to_text
-from ansible.module_utils._text import to_text
 from ansible.module_utils.parsing.convert_bool import boolean
 from ansible.plugins.action.reboot import (
     ActionModule as RebootActionModule,
     TimedOutException,
 )
-from ansible.utils.display import Display
 from ansible.utils.display import Display
 
 display = Display()
@@ -530,7 +528,7 @@ class ActionModule(RebootActionModule):
             result['msg'] = to_text(e)
             return result
 
-        if task_vars == None:
+        if task_vars is None:
             task_vars = {}
 
         distribution = self.get_distribution(task_vars)
