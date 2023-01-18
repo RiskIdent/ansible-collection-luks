@@ -16,7 +16,7 @@ This project tries to follow [SemVer 2.0.0](https://semver.org/).
 	https://changelog.md/
 -->
 
-## v0.3.0 (WIP)
+## v0.3.0 (2023-01-18)
 
 - Added "manual unlock" feature, where you have to manually unlock the machine
   if the `reboot_luks_ssh` action plugin succeeds in rebooting,
