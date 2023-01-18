@@ -31,7 +31,7 @@
       # We must extract the entire repository to ensure we include the LICENSE file
     - name: Unarchive git repo into /opt/initramfs-tools-network-hook
       ansible.builtin.unarchive:
-        remote_src: yes
+        remote_src: true
         src: /opt/initramfs-tools-network-hook.tar.gz
         dest: /opt
         extra_opts: [
