@@ -8,7 +8,7 @@
 # List of SSH public key strings that can login with forced command only
 # for unlocking
 dropbear_ssh_pub_keys_unlock: []
-  #- ssh-rsa AAAAB3NzaC1yc2E...
+  # - ssh-rsa AAAAB3NzaC1yc2E...
 
 # See "AUTHORIZED_KEYS FILE FORMAT" section in sshd(8) man page
 dropbear_ssh_pub_keys_unlock_options:
@@ -23,7 +23,7 @@ dropbear_ssh_pub_keys_unlock_options:
 # List of SSH public key strings that can login to shell prompt
 # (no forced command)
 dropbear_ssh_pub_keys_admin: []
-  #- ssh-rsa AAAAB3NzaC1yc2E...
+  # - ssh-rsa AAAAB3NzaC1yc2E...
 
 # See "AUTHORIZED_KEYS FILE FORMAT" section in sshd(8) man page
 dropbear_ssh_pub_keys_admin_options: []

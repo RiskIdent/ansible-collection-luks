@@ -155,7 +155,7 @@ In addition, `reboot_luks_ssh` also defines some additional parameters:
 
 ```yaml
 - hosts: servers
-  become: yes # need sudo access to reboot
+  become: true # need sudo access to reboot
   tasks:
     - name: Reboot
       reboot_luks_ssh:

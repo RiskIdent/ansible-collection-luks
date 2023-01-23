@@ -27,12 +27,12 @@ Example usage:
 
 ```yaml
 - hosts: servers
-  become: yes # need sudo access to reboot
+  become: true # need sudo access to reboot
   tasks:
     - name: Upgrade all apt packages
       ansible.builtin.apt:
         upgrade: dist
-        force_apt_get: yes
+        force_apt_get: true
 
     - name: Reboot
       riskident.luks.reboot_luks_ssh:
@@ -59,7 +59,7 @@ Example playbook:
 
 ```yaml
 - hosts: my_machine
-  become: yes
+  become: true
   roles:
      - { role: initramfs_dropbear, tags: initramfs_dropbear }
 ```
@@ -93,7 +93,7 @@ Example playbook:
 
 ```yaml
 - hosts: my_machine
-  become: yes
+  become: true
   roles:
      - { role: initramfs_network, tags: initramfs_network }
 ```

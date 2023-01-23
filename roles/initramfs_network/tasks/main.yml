@@ -42,7 +42,7 @@
   ansible.builtin.copy:
     src: "/opt/initramfs-tools-network-hook/etc/initramfs-tools/{{ item }}/"
     dest: "/etc/initramfs-tools/{{ item }}/"
-    remote_src: yes
+    remote_src: true
     mode: 0755
   # The recursive copy of ansible.builtin.copy doesn't seem to work with
   # multiple dirs with more than 1 in depth.
