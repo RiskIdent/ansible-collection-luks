@@ -23,7 +23,7 @@
 # https://github.com/ansible/ansible/blob/v2.12.6/lib/ansible/plugins/action/reboot.py
 # taken at 2022-06-08.
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from random import random
 import subprocess
 import time
@@ -322,7 +322,7 @@ class ActionModule(RebootActionModule):
         self._connection.reset()
 
     def set_result_elapsed(self, result: dict, start: datetime):
-        elapsed = datetime.utcnow() - start
+        elapsed = datetime.now(timezone.utc) - start
         result['elapsed'] = elapsed.seconds
 
     def run_reboot(self, distribution, previous_boot_time, task_vars):
@@ -438,14 +438,14 @@ class ActionModule(RebootActionModule):
         # RiskIdent: This function is taken directly from the ansible.builtin.reboot code
         # Changed sections are marked with a "# RiskIdent:" line comment
 
-        max_end_time = datetime.utcnow() + timedelta(seconds=reboot_timeout)
+        max_end_time = datetime.now(timezone.utc) + timedelta(seconds=reboot_timeout)
         if action_kwargs is None:
             action_kwargs = {}
 
         fail_count = 0
         max_fail_sleep = 12
 
-        while datetime.utcnow() < max_end_time:
+        while datetime.now(timezone.utc) < max_end_time:
             try:
                 action(**action_kwargs)
                 if action_desc:
