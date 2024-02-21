@@ -16,6 +16,10 @@ This project tries to follow [SemVer 2.0.0](https://semver.org/).
 	https://changelog.md/
 -->
 
+## v0.3.1 (WIP)
+
+- Fixed TypeError on datetime variables that were preventing the `reboot_luks_ssh` action plugin to succeeds in rebooting. (#20)
+
 ## v0.3.0 (2023-01-18)
 
 - Added "manual unlock" feature, where you have to manually unlock the machine
