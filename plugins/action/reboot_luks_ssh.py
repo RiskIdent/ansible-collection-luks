@@ -20,10 +20,10 @@
 # with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 # This script contains some modified snippets copied from
-# https://github.com/ansible/ansible/blob/v2.12.6/lib/ansible/plugins/action/reboot.py
-# taken at 2022-06-08.
+# https://github.com/ansible/ansible/blob/v2.16.3/lib/ansible/plugins/action/reboot.py
+# taken at 2024-02-21.
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from random import random
 import subprocess
 import time
@@ -242,7 +242,7 @@ class ActionModule(RebootActionModule):
             action=self._task.action, args=args))
         return args
 
-    def run_luks_ssh_prompt(self):
+    def run_luks_ssh_prompt(self, distribution, action_kwargs=None):
         args = self.get_luks_ssh_args()
         try:
             display.vvv("{action}: Attempting LUKS SSH unlock via SSH exec".format(
@@ -283,6 +283,7 @@ class ActionModule(RebootActionModule):
             self.ri_do_until_success_or_timeout(
                 action=self.run_luks_ssh_prompt,
                 action_desc="post-reboot unlock LUKS full-disk encryption",
+                distribution=distribution,
                 reboot_timeout=self.luks_ssh_timeout)
             return {}
 
@@ -322,7 +323,7 @@ class ActionModule(RebootActionModule):
         self._connection.reset()
 
     def set_result_elapsed(self, result: dict, start: datetime):
-        elapsed = datetime.utcnow() - start
+        elapsed = datetime.now(timezone.utc) - start
         result['elapsed'] = elapsed.seconds
 
     def run_reboot(self, distribution, previous_boot_time, task_vars):
@@ -434,20 +435,21 @@ class ActionModule(RebootActionModule):
             raise RuntimeError("Failed converting SSH private key to public key, output:\n{output}".format(
                 output=e.output)) from e
 
-    def ri_do_until_success_or_timeout(self, action, reboot_timeout, action_desc, action_kwargs=None):
+    def ri_do_until_success_or_timeout(self, action, reboot_timeout, action_desc, distribution, action_kwargs=None):
         # RiskIdent: This function is taken directly from the ansible.builtin.reboot code
         # Changed sections are marked with a "# RiskIdent:" line comment
 
-        max_end_time = datetime.utcnow() + timedelta(seconds=reboot_timeout)
+        max_end_time = datetime.now(timezone.utc) + timedelta(seconds=reboot_timeout)
         if action_kwargs is None:
             action_kwargs = {}
 
         fail_count = 0
         max_fail_sleep = 12
+        last_error_msg = ''
 
-        while datetime.utcnow() < max_end_time:
+        while datetime.now(timezone.utc) < max_end_time:
             try:
-                action(**action_kwargs)
+                action(distribution=distribution, **action_kwargs)
                 if action_desc:
                     display.debug('{action}: {desc} success'.format(
                         action=self._task.action, desc=action_desc))
@@ -461,7 +463,7 @@ class ActionModule(RebootActionModule):
                         self._connection.reset()
                     except AnsibleConnectionFailure:
                         pass
-                # Use exponential backoff with a max timout, plus a little bit of randomness
+                # Use exponential backoff with a max timeout, plus a little bit of randomness
                 random_int = random.randint(0, 1000) / 1000
                 fail_sleep = 2 ** fail_count + random_int
                 if fail_sleep > max_fail_sleep:
@@ -472,14 +474,18 @@ class ActionModule(RebootActionModule):
                         error = to_text(e).splitlines()[-1]
                     except IndexError as e:
                         error = to_text(e)
-                    display.debug("{action}: {desc} fail '{err}', retrying in {sleep:.4} seconds...".format(
-                        action=self._task.action,
-                        desc=action_desc,
-                        err=error,
-                        sleep=fail_sleep))
+                    last_error_msg = f"{self._task.action}: {action_desc} fail '{error}'"
+                    msg = f"{last_error_msg}, retrying in {fail_sleep:.4f} seconds..."
+
+                    display.debug(msg)
+                    display.vvv(msg)
                 fail_count += 1
                 time.sleep(fail_sleep)
 
+        if last_error_msg:
+            msg = f"Last error message before the timeout exception - {last_error_msg}"
+            display.debug(msg)
+            display.vvv(msg)
         raise TimedOutException('Timed out waiting for {desc} (timeout={timeout})'.format(
             desc=action_desc, timeout=reboot_timeout))
 
