@@ -16,7 +16,7 @@ This project tries to follow [SemVer 2.0.0](https://semver.org/).
 	https://changelog.md/
 -->
 
-## v0.3.1 (2023-03-04)
+## v0.3.1 (2025-02-27)
 
 - Fixed TypeError on datetime variables that were preventing the
   `reboot_luks_ssh` action plugin to succeeds in rebooting. (#20)
