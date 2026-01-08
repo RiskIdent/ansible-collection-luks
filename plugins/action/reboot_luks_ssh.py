@@ -368,8 +368,7 @@ class ActionModule(RebootActionModule):
             return
         private_key = self.luks_ssh_private_key
         if not private_key:
-            raise AnsibleActionFail(
-                "luks_ssh_private_key_file or luks_ssh_private_key is required")
+            return
 
         self.add_private_key_to_ssh_agent(private_key)
         self._has_added_key_to_ssh_agent = True
