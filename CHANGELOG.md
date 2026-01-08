@@ -16,6 +16,10 @@ This project tries to follow [SemVer 2.0.0](https://semver.org/).
 	https://changelog.md/
 -->
 
+## v0.3.2 (2026-01-08)
+
+- Make ssh private key vars optional. (#22)
+
 ## v0.3.1 (2025-02-27)
 
 - Fixed TypeError on datetime variables that were preventing the
