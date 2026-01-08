@@ -18,7 +18,7 @@ This project tries to follow [SemVer 2.0.0](https://semver.org/).
 
 ## v0.3.2 (2026-01-08)
 
-- Make ssh private key vars optional by @karl1k in https://github.com/RiskIdent/ansible-collection-luks/pull/22
+- Make ssh private key vars optional. (#22)
 
 ## v0.3.1 (2025-02-27)
 
