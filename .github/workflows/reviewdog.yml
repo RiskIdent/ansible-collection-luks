@@ -1,4 +1,3 @@
----
 # SPDX-FileCopyrightText: 2020 James Mills / prologic
 #
 # SPDX-License-Identifier: MIT
@@ -9,13 +8,20 @@ jobs:
   remark-lint:
     name: runner / remark-lint
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
       - name: install remark presets
         run: npm install
         shell: bash
       - name: remark-lint
-        uses: reviewdog/action-remark-lint@v5
+        uses: reviewdog/action-remark-lint@82225f7db5b4a3caaca3052733b6800fa7d109b0 # v5.18.0
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           reporter: github-pr-check
@@ -23,10 +29,17 @@ jobs:
   yamllint:
     name: runner / yamllint
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
     steps:
-      - uses: actions/checkout@v1
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
       - name: yamllint
-        uses: reviewdog/action-yamllint@v1
+        uses: reviewdog/action-yamllint@f01d8a48fd8d89f89895499fca2cff09f9e9e8c0 # v1.21.0
         with:
           github_token: ${{ secrets.github_token }}
           reporter: github-pr-review
@@ -35,13 +48,21 @@ jobs:
   ansible-lint:
     name: runner / ansible-lint
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
           python-version: 3.10.6
+
       - name: ansible-lint
-        uses: reviewdog/action-ansiblelint@v1
+        uses: reviewdog/action-ansiblelint@5b8ca4b12dcbcdf63d4739dacd90609abafe8924 # v1.17.0
         with:
           github_token: ${{ secrets.github_token }}
           reporter: github-pr-review
