@@ -62,7 +62,7 @@ jobs:
           python-version: 3.10.6
 
       - name: ansible-lint
-        uses: reviewdog/action-ansiblelint@5b8ca4b12dcbcdf63d4739dacd90609abafe8924 # v1.17.0
+        uses: reviewdog/action-ansiblelint@4416d8eb70bc345d589ff60817395e4bdaf1981b # v1.18.0
         with:
           github_token: ${{ secrets.github_token }}
           reporter: github-pr-review
